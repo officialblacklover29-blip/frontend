@@ -74,7 +74,7 @@ const Home = ({ onLogout }) => {
     try {
       const currentUserId = localStorage.getItem('userId');
       if (!currentUserId) return;
-      // ✅ FIX: Double slash removed
+      // ✅ FIX: Double slash removed (Corrected)
       const response = await axios.get(`https://backend-colly.onrender.com/api/posts/${currentUserId}`);
       setPosts(response.data); 
     } catch (err) { console.error("Fetch Error:", err); }
@@ -89,7 +89,7 @@ const Home = ({ onLogout }) => {
     data.append('title', postText || "Colly Moment"); 
 
     try {
-      // ✅ FIX: Double slash removed
+      // ✅ FIX: Double slash removed (Corrected)
       const res = await axios.post('https://backend-colly.onrender.com/api/upload', data, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
@@ -105,7 +105,7 @@ const Home = ({ onLogout }) => {
 
   const handleLike = async (postId) => {
     try {
-      // ✅ FIX: Double slash removed
+      // ✅ FIX: Double slash removed (Corrected)
       const res = await axios.put(`https://backend-colly.onrender.com/api/posts/${postId}/like`);
       setPosts(posts.map(p => p._id === postId ? { ...p, likes: res.data.likes } : p));
       if (!likedPosts.includes(postId)) setLikedPosts([...likedPosts, postId]);
@@ -116,7 +116,7 @@ const Home = ({ onLogout }) => {
     const commentText = prompt("Write your comment:");
     if (!commentText || commentText.trim() === "") return;
     try {
-      // ✅ FIX: Double slash removed
+      // ✅ FIX: Double slash removed (Corrected)
       const res = await axios.post(`https://backend-colly.onrender.com/api/posts/${postId}/comment`, { text: commentText.trim() });
       setPosts(posts.map(p => p._id === postId ? res.data : p)); 
       alert("Comment posted!");
@@ -140,7 +140,7 @@ const Home = ({ onLogout }) => {
   const handleDelete = async (post) => {
     if (window.confirm("Delete permanently?")) {
       try {
-        // ✅ FIX: Double slash removed
+        // ✅ FIX: Double slash removed (Corrected)
         await axios.delete(`https://backend-colly.onrender.com/api/posts/${post._id}`);
         setPosts(posts.filter(p => p._id !== post._id)); 
         alert("Post Deleted! 🗑️");
@@ -148,7 +148,6 @@ const Home = ({ onLogout }) => {
     }
   };
 
-  // ✅ ADDED: Share Function (Ye naya hai)
   const handleShare = (post) => {
     const link = `https://colly.vercel.app/post/${post._id}`;
     navigator.clipboard.writeText(link);
