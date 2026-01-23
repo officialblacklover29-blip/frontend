@@ -74,7 +74,8 @@ const Home = ({ onLogout }) => {
     try {
       const currentUserId = localStorage.getItem('userId');
       if (!currentUserId) return;
-      const response = await axios.get(`https://colly-1-iw6c.onrender.com/api/posts/${currentUserId}`);
+      // ✅ FIX: Double slash removed
+      const response = await axios.get(`https://backend-colly.onrender.com/api/posts/${currentUserId}`);
       setPosts(response.data); 
     } catch (err) { console.error("Fetch Error:", err); }
   };
@@ -88,7 +89,8 @@ const Home = ({ onLogout }) => {
     data.append('title', postText || "Colly Moment"); 
 
     try {
-      const res = await axios.post('https://colly-1-iw6c.onrender.com/api/upload', data, {
+      // ✅ FIX: Double slash removed
+      const res = await axios.post('https://backend-colly.onrender.com/api/upload', data, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       if (res.data.success) {
@@ -103,7 +105,8 @@ const Home = ({ onLogout }) => {
 
   const handleLike = async (postId) => {
     try {
-      const res = await axios.put(`https://colly-1-iw6c.onrender.com/api/posts/${postId}/like`);
+      // ✅ FIX: Double slash removed
+      const res = await axios.put(`https://backend-colly.onrender.com/api/posts/${postId}/like`);
       setPosts(posts.map(p => p._id === postId ? { ...p, likes: res.data.likes } : p));
       if (!likedPosts.includes(postId)) setLikedPosts([...likedPosts, postId]);
     } catch (err) { console.error("Like failed"); }
@@ -113,7 +116,8 @@ const Home = ({ onLogout }) => {
     const commentText = prompt("Write your comment:");
     if (!commentText || commentText.trim() === "") return;
     try {
-      const res = await axios.post(`https://colly-1-iw6c.onrender.com/api/posts/${postId}/comment`, { text: commentText.trim() });
+      // ✅ FIX: Double slash removed
+      const res = await axios.post(`https://backend-colly.onrender.com/api/posts/${postId}/comment`, { text: commentText.trim() });
       setPosts(posts.map(p => p._id === postId ? res.data : p)); 
       alert("Comment posted!");
     } catch (err) { alert("Comment failed!"); }
@@ -136,7 +140,8 @@ const Home = ({ onLogout }) => {
   const handleDelete = async (post) => {
     if (window.confirm("Delete permanently?")) {
       try {
-        await axios.delete(`https://colly-1-iw6c.onrender.com/api/posts/${post._id}`);
+        // ✅ FIX: Double slash removed
+        await axios.delete(`https://backend-colly.onrender.com/api/posts/${post._id}`);
         setPosts(posts.filter(p => p._id !== post._id)); 
         alert("Post Deleted! 🗑️");
       } catch (err) { alert("Delete failed!"); }
