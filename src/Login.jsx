@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Logo from "./components/Logo";
 
 const AuthPage = (props) => {
-  const [mode, setMode] = useState("login");
+  const [mode, setMode] = useState("Login");
   const [leftRandomPositions, setLeftRandomPositions] = useState([]);
 
   const [formData, setFormData] = useState({
