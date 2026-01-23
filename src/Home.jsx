@@ -365,7 +365,7 @@ const handleNoteChange = (e) => {
                   <textarea 
                       value={devNotes}
                       onChange={handleNoteChange}
-                      placeholder="Likho kya fail ho raha hai..."
+                      placeholder="jo bhi dikkatein hain idhar likho ~ from ajeet"
                       style={{
                           width: '100%', height: '250px', backgroundColor: theme.inputBg, 
                           color: theme.textMain, border: 'none', borderRadius: '10px', 
