@@ -15,7 +15,8 @@ const AuthPage = (props) => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("https://backend-colly.onrender.com//login", {
+      // ✅ FIX: Double slash removed
+      const res = await fetch("https://backend-colly.onrender.com/login", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ identifier: formData.email, password: formData.password })
       });
@@ -32,12 +33,13 @@ const AuthPage = (props) => {
   const handleSignupStart = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("https://backend-colly.onrender.com//send-signup-otps", {
+      // ✅ FIX: Double slash removed
+      const res = await fetch("https://backend-colly.onrender.com/send-signup-otps", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: formData.email, phone: formData.phone })
       });
       if (res.ok) { alert("✨ OTP Sent to your inbox"); setMode("otp"); }
-      else alert(data.error || "Error sending OTP");
+      else alert("Error sending OTP"); // Removed 'data' variable issue here too
     } catch { alert("Server error."); }
   };
 
@@ -49,7 +51,8 @@ const AuthPage = (props) => {
       : { identifier: formData.email, otp: formData.otp, newPassword: formData.newPassword };
 
     try {
-      const res = await fetch(`https://backend-colly.onrender.com//${url}`, {
+      // ✅ FIX: Double slash removed
+      const res = await fetch(`https://backend-colly.onrender.com/${url}`, {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
       });
       if (res.ok) { alert("Welcome to Colly ✨"); setMode("login"); }
@@ -60,7 +63,8 @@ const AuthPage = (props) => {
   const handleForgotStart = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("https://backend-colly.onrender.com//forgot-password-otp", {
+      // ✅ FIX: Double slash removed
+      const res = await fetch("https://backend-colly.onrender.com/forgot-password-otp", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ identifier: formData.email })
       });
@@ -76,15 +80,14 @@ const AuthPage = (props) => {
     "https://loremflickr.com/500/700/party,friends?random=102",   
     "https://loremflickr.com/500/700/indian,street,food?random=103", 
     "https://loremflickr.com/500/700/marvel,superhero?random=104", 
-    "https://loremflickr.com/500/700/selfie,group?random=105",    
-    "https://loremflickr.com/500/700/india,travel?random=106",     
-    "https://loremflickr.com/500/700/concert,crowd?random=107",    
-    "https://loremflickr.com/500/700/avengers,comics?random=108",  
-    "https://loremflickr.com/500/700/wedding,indian?random=109",   
+    "https://loremflickr.com/500/700/selfie,group?random=105",     
+    "https://loremflickr.com/500/700/india,travel?random=106",      
+    "https://loremflickr.com/500/700/concert,crowd?random=107",     
+    "https://loremflickr.com/500/700/avengers,comics?random=108",   
+    "https://loremflickr.com/500/700/wedding,indian?random=109",    
   ];
 
   // --- 🇮🇳 HUGE LIST OF UNIQUE INDIAN IMAGES (30+) ---
-  // No repetition will happen as we map them by index
   const festivePopImages = [
     "https://loremflickr.com/150/150/taj,mahal?random=1",
     "https://loremflickr.com/150/150/holi,face?random=2",
@@ -313,17 +316,17 @@ const AuthPage = (props) => {
                       <input name="surname" placeholder="Surname" onChange={handleChange} style={styles.input} required />
                     </div>
                     <div style={styles.row}>
-                       <div style={{ flex: 1.2 }}>
-                          <input name="dob" type="date" onChange={handleChange} style={styles.input} required />
-                       </div>
-                       <div style={{ flex: 1 }}>
-                          <select name="gender" onChange={handleChange} style={styles.input} required>
-                              <option value="">Gender</option>
-                              <option value="male">Male</option>
-                              <option value="female">Female</option>
-                              <option value="custom">Custom</option>
-                          </select>
-                       </div>
+                        <div style={{ flex: 1.2 }}>
+                           <input name="dob" type="date" onChange={handleChange} style={styles.input} required />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                           <select name="gender" onChange={handleChange} style={styles.input} required>
+                               <option value="">Gender</option>
+                               <option value="male">Male</option>
+                               <option value="female">Female</option>
+                               <option value="custom">Custom</option>
+                           </select>
+                        </div>
                     </div>
                   </>
                 )}
@@ -353,10 +356,10 @@ const AuthPage = (props) => {
                 {mode === "signup" && (
                    <>
                      <p style={styles.disclaimer}>
-                        People who use our service may have uploaded your contact information to Colly. <span style={{color: theme.linkText, cursor: 'pointer'}}>Learn more</span>.
+                       People who use our service may have uploaded your contact information to Colly. <span style={{color: theme.linkText, cursor: 'pointer'}}>Learn more</span>.
                      </p>
                      <p style={styles.disclaimer}>
-                        By clicking Sign Up, you agree to our <span style={{color: theme.linkText}}>Terms</span>, <span style={{color: theme.linkText}}>Privacy Policy</span>.
+                       By clicking Sign Up, you agree to our <span style={{color: theme.linkText}}>Terms</span>, <span style={{color: theme.linkText}}>Privacy Policy</span>.
                      </p>
                    </>
                 )}

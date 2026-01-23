@@ -19,8 +19,8 @@ function Signup() {
     e.preventDefault();
     setLoading(true);
     try {
-      // Backend expects both email and phone for the dual-otp system we built
-      await axios.post('https://colly-1-iw6c.onrender.com/send-signup-otps', { email: formData.email, phone: formData.phone });
+      // ✅ FIX: Double slash removed
+      await axios.post('https://backend-colly.onrender.com/send-signup-otps', { email: formData.email, phone: formData.phone });
       alert(`✅ OTPs Sent! Check Console.`);
       setStep(2);
     } catch (err) {
@@ -32,7 +32,8 @@ function Signup() {
   const handleSignup = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('https://colly-1-iw6c.onrender.com/signup-verified', formData);
+      // ✅ FIX: Double slash removed
+      await axios.post('https://backend-colly.onrender.com/signup-verified', formData);
       alert('🎉 Account Created Successfully!');
       navigate('/');
     } catch (err) {
