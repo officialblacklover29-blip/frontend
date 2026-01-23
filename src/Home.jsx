@@ -20,22 +20,22 @@ const Home = ({ onLogout }) => {
   const [savedPosts, setSavedPosts] = useState([]); 
   const [postText, setPostText] = useState(""); 
   
-  // Home.jsx ke andar states ke saath add karein
-const [devNotes, setDevNotes] = useState("");
-const [showNoteBox, setShowNoteBox] = useState(false);
+  // Developer Notes States
+  const [devNotes, setDevNotes] = useState("");
+  const [showNoteBox, setShowNoteBox] = useState(false);
 
-// LocalStorage se purane notes load karne ke liye
-useEffect(() => {
-  const savedNotes = localStorage.getItem("colly_dev_notes");
-  if (savedNotes) setDevNotes(savedNotes);
-}, []);
+  // LocalStorage se purane notes load karne ke liye
+  useEffect(() => {
+    const savedNotes = localStorage.getItem("colly_dev_notes");
+    if (savedNotes) setDevNotes(savedNotes);
+  }, []);
 
-// Notes save karne ka function
-const handleNoteChange = (e) => {
-  const value = e.target.value;
-  setDevNotes(value);
-  localStorage.setItem("colly_dev_notes", value);
-};
+  // Notes save karne ka function
+  const handleNoteChange = (e) => {
+    const value = e.target.value;
+    setDevNotes(value);
+    localStorage.setItem("colly_dev_notes", value);
+  };
 
   // ✅ 1. Search State
   const [searchText, setSearchText] = useState("");
@@ -70,7 +70,6 @@ const handleNoteChange = (e) => {
     setSavedPosts(localSaved);
   }, [view]); 
 
-  // ✅ FIXED: Correct Backticks and Render Link
   const fetchPosts = async () => {
     try {
       const currentUserId = localStorage.getItem('userId');
@@ -80,7 +79,6 @@ const handleNoteChange = (e) => {
     } catch (err) { console.error("Fetch Error:", err); }
   };
 
-  // ✅ FIXED: Cleaned handleUpload Syntax
   const handleUpload = async () => {
     const currentUserId = localStorage.getItem('userId');
     if (!selectedFile) return alert("Please select a photo first!");
@@ -103,7 +101,6 @@ const handleNoteChange = (e) => {
     } catch (err) { alert("Upload failed!"); }
   };
 
-  // ✅ FIXED: Added Backticks for Like
   const handleLike = async (postId) => {
     try {
       const res = await axios.put(`https://colly-1-iw6c.onrender.com/api/posts/${postId}/like`);
@@ -112,7 +109,6 @@ const handleNoteChange = (e) => {
     } catch (err) { console.error("Like failed"); }
   };
 
-  // ✅ FIXED: Fixed Comment Brackets and Logic
   const handleComment = async (postId) => {
     const commentText = prompt("Write your comment:");
     if (!commentText || commentText.trim() === "") return;
@@ -137,7 +133,6 @@ const handleNoteChange = (e) => {
     setSavedPosts(currentSaved);
   };
 
-  // ✅ FIXED: Removed extra quotes and added Backticks
   const handleDelete = async (post) => {
     if (window.confirm("Delete permanently?")) {
       try {
@@ -148,7 +143,14 @@ const handleNoteChange = (e) => {
     }
   };
 
-  // --- STYLES OBJECT (Keeping all original styles) ---
+  // ✅ ADDED: Share Function (Ye naya hai)
+  const handleShare = (post) => {
+    const link = `https://colly.vercel.app/post/${post._id}`;
+    navigator.clipboard.writeText(link);
+    alert("Link copied to clipboard! 🔗");
+  };
+
+  // --- STYLES OBJECT ---
   const styles = {
     page: { backgroundColor: theme.bg, minHeight: "100vh", fontFamily: "'Verdana', sans-serif", color: theme.textMain, transition: '0.3s' },
     navbar: { backgroundColor: theme.card, height: "60px", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 40px", position: "sticky", top: 0, zIndex: 100, boxShadow: theme.shadow, borderBottom: `1px solid ${theme.border}`, transition: '0.3s' },
@@ -243,7 +245,7 @@ const handleNoteChange = (e) => {
         {/* 3. CENTER CONTENT */}
         <div style={styles.feed}>
             
-            {/* Create Post Box */}
+            {/* Create Post Box - Sirf Feed mein dikhega */}
             {view === 'feed' && (
               <div style={styles.createBox}>
                   <div style={styles.createTop}>
@@ -290,7 +292,10 @@ const handleNoteChange = (e) => {
                                 {likedPosts.includes(post._id) ? '❤️' : '🤍'}
                             </span>
                             <span onClick={() => handleComment(post._id)} style={{...styles.actionIcon, color: theme.textMain}}>💬</span>
-                            <span style={{...styles.actionIcon, color: theme.textMain}}>🚀</span>
+                            
+                            {/* ✅ FIXED: Share Button ab chalega */}
+                            <span onClick={() => handleShare(post)} style={{...styles.actionIcon, color: theme.textMain}}>🚀</span>
+                            
                             <span onClick={() => handleSave(post)} style={{...styles.actionIcon, marginLeft: 'auto', color: savedPosts.find(p => p._id === post._id) ? theme.primary : theme.textMain}}>
                                 {savedPosts.find(p => p._id === post._id) ? '🔖' : '💾'}
                             </span>
@@ -305,6 +310,22 @@ const handleNoteChange = (e) => {
                     </div>
                   ))}
                 </>
+            ) : view === 'saved' ? ( 
+                /* ✅ ADDED: Saved Page UI */
+                <div>
+                    <h3 style={{color: theme.textMain, padding: '10px'}}>My Collections 🔖</h3>
+                    {savedPosts.length === 0 ? <p style={{color: theme.textLight, padding: '10px'}}>Nothing saved yet!</p> : (
+                        savedPosts.map(post => (
+                            <div key={post._id} style={{...styles.postCard, marginBottom: '20px'}}>
+                                <img src={post.img} style={styles.postImg} alt="" />
+                                <div style={{padding: '10px'}}>
+                                    <p style={{color: theme.textMain, fontWeight: 'bold'}}>{post.title}</p>
+                                    <button onClick={() => handleSave(post)} style={{border:'1px solid red', background:'transparent', color:'red', borderRadius:'5px', cursor:'pointer', padding: '5px 10px', marginTop: '5px'}}>Remove</button>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
             ) : view === 'profile' ? (
                 <Profile />
             ) : view === 'messages' ? (
@@ -338,6 +359,7 @@ const handleNoteChange = (e) => {
         </div>
 
       </div>
+      
       {/* --- DEVELOPER NOTES FLOATING BUTTON --- */}
       <div style={{ position: 'fixed', bottom: '30px', right: '30px', zIndex: 9999, display: 'block' }}>
           <button 
@@ -365,7 +387,7 @@ const handleNoteChange = (e) => {
                   <textarea 
                       value={devNotes}
                       onChange={handleNoteChange}
-                      placeholder="jo bhi dikkatein hain idhar likho ~ from ajeet"
+                      placeholder="Likho kya fail ho raha hai..."
                       style={{
                           width: '100%', height: '250px', backgroundColor: theme.inputBg, 
                           color: theme.textMain, border: 'none', borderRadius: '10px', 
@@ -378,7 +400,7 @@ const handleNoteChange = (e) => {
               </div>
           )}
       </div> 
-    </div> // Ye main container ka last div hai
+    </div>
   );
 };
 
