@@ -327,9 +327,9 @@ const Home = ({ onLogout }) => {
                     )}
                 </div>
             ) : view === 'profile' ? (
-                <Profile />
+    <Profile darkMode={isDarkMode} />
             ) : view === 'messages' ? (
-                <Messages />
+                <Messages darkMode={isDarkMode}/>
             ) : view === 'notifications' ? (
                 <Notifications />
             ) : view === 'settings' ? (  
