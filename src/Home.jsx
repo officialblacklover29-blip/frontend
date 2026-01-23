@@ -3,7 +3,7 @@ import axios from 'axios';
 import { UserContext } from './context/UserContext'; 
 
 // Components Imports
-import Logo from './components/Logo';
+import Logo from './components/Logo'; 
 import Profile from './pages/Profile';
 import Messages from './pages/Messages';
 import Notifications from './pages/Notifications';
@@ -20,6 +20,23 @@ const Home = ({ onLogout }) => {
   const [savedPosts, setSavedPosts] = useState([]); 
   const [postText, setPostText] = useState(""); 
   
+  // Home.jsx ke andar states ke saath add karein
+const [devNotes, setDevNotes] = useState("");
+const [showNoteBox, setShowNoteBox] = useState(false);
+
+// LocalStorage se purane notes load karne ke liye
+useEffect(() => {
+  const savedNotes = localStorage.getItem("colly_dev_notes");
+  if (savedNotes) setDevNotes(savedNotes);
+}, []);
+
+// Notes save karne ka function
+const handleNoteChange = (e) => {
+  const value = e.target.value;
+  setDevNotes(value);
+  localStorage.setItem("colly_dev_notes", value);
+};
+
   // ✅ 1. Search State
   const [searchText, setSearchText] = useState("");
 
@@ -321,6 +338,39 @@ const Home = ({ onLogout }) => {
         </div>
 
       </div>
+      {/* --- DEVELOPER NOTES FLOATING BUTTON --- */}
+<div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 1000 }}>
+    <button 
+        onClick={() => setShowNoteBox(!showNoteBox)}
+        style={{
+            width: '50px', height: '50px', borderRadius: '50%', backgroundColor: '#ff4757', 
+            color: 'white', border: 'none', cursor: 'pointer', fontSize: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+        }}
+    >
+        📝
+    </button>
+
+    {showNoteBox && (
+        <div style={{
+            position: 'absolute', bottom: '60px', right: '0', width: '300px', 
+            backgroundColor: theme.card, borderRadius: '12px', padding: '15px', 
+            boxShadow: '0 8px 24px rgba(0,0,0,0.3)', border: `1px solid ${theme.border}`
+        }}>
+            <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: theme.primary }}>Dev Logs / To-Do</h4>
+            <textarea 
+                value={devNotes}
+                onChange={handleNoteChange}
+                placeholder="Likho kya fail ho raha hai..."
+                style={{
+                    width: '100%', height: '200px', backgroundColor: theme.inputBg, 
+                    color: theme.textMain, border: 'none', borderRadius: '8px', 
+                    padding: '10px', fontSize: '13px', outline: 'none', resize: 'none'
+                }}
+            />
+            <p style={{ fontSize: '10px', color: theme.textLight, marginTop: '5px' }}>Auto-saved in LocalStorage</p>
+        </div>
+    )}
+</div>
     </div>
   );
 };
