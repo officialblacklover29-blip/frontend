@@ -339,12 +339,29 @@ const handleNoteChange = (e) => {
 
       </div>
       {/* --- DEVELOPER NOTES FLOATING BUTTON --- */}
-<div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 1000 }}>
+<div style={{ 
+    position: 'fixed', 
+    bottom: '30px', 
+    right: '30px', 
+    zIndex: 9999, // Sabse upar rakhne ke liye
+    display: 'block' 
+}}>
     <button 
         onClick={() => setShowNoteBox(!showNoteBox)}
         style={{
-            width: '50px', height: '50px', borderRadius: '50%', backgroundColor: '#ff4757', 
-            color: 'white', border: 'none', cursor: 'pointer', fontSize: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+            width: '60px', 
+            height: '60px', 
+            borderRadius: '50%', 
+            backgroundColor: '#ff4757', 
+            color: 'white', 
+            border: 'none', 
+            cursor: 'pointer', 
+            fontSize: '28px', 
+            boxShadow: '0 6px 16px rgba(255, 71, 87, 0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: '0.3s'
         }}
     >
         📝
@@ -352,26 +369,46 @@ const handleNoteChange = (e) => {
 
     {showNoteBox && (
         <div style={{
-            position: 'absolute', bottom: '60px', right: '0', width: '300px', 
-            backgroundColor: theme.card, borderRadius: '12px', padding: '15px', 
-            boxShadow: '0 8px 24px rgba(0,0,0,0.3)', border: `1px solid ${theme.border}`
+            position: 'absolute', 
+            bottom: '75px', 
+            right: '0', 
+            width: '320px', 
+            backgroundColor: theme.card, 
+            borderRadius: '15px', 
+            padding: '20px', 
+            boxShadow: '0 10px 30px rgba(0,0,0,0.4)', 
+            border: `1px solid ${theme.border}`,
+            animation: 'fadeIn 0.3s ease-in-out'
         }}>
-            <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: theme.primary }}>Dev Logs / To-Do</h4>
+            <h4 style={{ margin: '0 0 12px 0', fontSize: '15px', color: theme.primary, fontWeight: 'bold' }}>
+                🚀 Dev Logs / Tasks
+            </h4>
             <textarea 
                 value={devNotes}
                 onChange={handleNoteChange}
                 placeholder="Likho kya fail ho raha hai..."
                 style={{
-                    width: '100%', height: '200px', backgroundColor: theme.inputBg, 
-                    color: theme.textMain, border: 'none', borderRadius: '8px', 
-                    padding: '10px', fontSize: '13px', outline: 'none', resize: 'none'
+                    width: '100%', 
+                    height: '250px', 
+                    backgroundColor: theme.inputBg, 
+                    color: theme.textMain, 
+                    border: 'none', 
+                    borderRadius: '10px', 
+                    padding: '12px', 
+                    fontSize: '14px', 
+                    outline: 'none', 
+                    resize: 'none',
+                    lineHeight: '1.5'
                 }}
             />
-            <p style={{ fontSize: '10px', color: theme.textLight, marginTop: '5px' }}>Auto-saved in LocalStorage</p>
+            <p style={{ fontSize: '11px', color: theme.textLight, marginTop: '8px', textAlign: 'right' }}>
+                Saved in LocalStorage ✅
+            </p>
         </div>
     )}
 </div>
-    </div>
+</div>
+  
   );
 };
 
