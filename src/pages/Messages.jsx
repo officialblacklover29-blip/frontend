@@ -29,7 +29,7 @@ const Messages = ({ darkMode }) => {
   // ✅ 1. CONNECT SOCKET
   useEffect(() => {
     // Render Backend URL
-    socket.current = io("https://colly-1-iw6c.onrender.com");
+    socket.current = io("https://backend-colly.onrender.com/");
     
     // Server ko batao main online hu
     socket.current.emit("join_user", userId);
@@ -50,7 +50,7 @@ const Messages = ({ darkMode }) => {
   useEffect(() => {
     const getConversations = async () => {
       try {
-        const res = await axios.get(`https://colly-1-iw6c.onrender.com/api/conversations/${userId}`);
+        const res = await axios.get(`https://backend-colly.onrender.com//api/conversations/${userId}`);
         setConversations(res.data);
       } catch (err) { console.error(err); }
     };
@@ -62,7 +62,7 @@ const Messages = ({ darkMode }) => {
     if (currentChat) {
         const getMessages = async () => {
             try {
-                const res = await axios.get(`https://colly-1-iw6c.onrender.com/api/messages/${userId}/${currentChat._id}`);
+                const res = await axios.get(`https://backend-colly.onrender.com//api/messages/${userId}/${currentChat._id}`);
                 setMessages(res.data);
             } catch (err) { console.error(err); }
         };
@@ -92,7 +92,7 @@ const Messages = ({ darkMode }) => {
 
     // 2. Database me save karo
     try {
-        await axios.post('https://colly-1-iw6c.onrender.com/api/messages/send', {
+        await axios.post('https://backend-colly.onrender.com//api/messages/send', {
             senderId: userId,
             receiverId: currentChat._id,
             text: newMessage

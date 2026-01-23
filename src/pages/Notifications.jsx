@@ -21,7 +21,7 @@ const Notifications = ({ darkMode }) => {
   useEffect(() => {
     if (!currentUserId) return;
     
-    axios.get(`https://colly-1-iw6c.onrender.com/api/notifications/${currentUserId}`)
+    axios.get(`https://backend-colly.onrender.com//api/notifications/${currentUserId}`)
         .then(res => {
             // Transform DB data to UI format
             const formatted = res.data.map(n => ({

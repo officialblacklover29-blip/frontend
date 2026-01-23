@@ -37,7 +37,7 @@ const Profile = ({ darkMode }) => {
     if (!storedUsername) return;
 
     // 1. Fetch User Info
-    axios.get(`https://colly-1-iw6c.onrender.com/api/user/${storedUsername}`)
+    axios.get(`https://backend-colly.onrender.com//api/user/${storedUsername}`)
       .then(res => {
         setUser(res.data);
         setFormData({ 
@@ -51,7 +51,7 @@ const Profile = ({ darkMode }) => {
 
     // 2. ✅ Fetch User's Own Posts
     if (storedUserId) {
-      axios.get(`https://colly-1-iw6c.onrender.com/api/posts/${storedUserId}`)
+      axios.get(`https://backend-colly.onrender.com//api/posts/${storedUserId}`)
         .then(res => {
             // Filter posts specific to this user if API returns all feed
             // Assuming API returns user-specific posts or we filter manually:
@@ -79,7 +79,7 @@ const Profile = ({ darkMode }) => {
     }
 
     try {
-      const res = await axios.put('https://colly-1-iw6c.onrender.com/api/user/profile', data, {
+      const res = await axios.put('https://backend-colly.onrender.com//api/user/profile', data, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 

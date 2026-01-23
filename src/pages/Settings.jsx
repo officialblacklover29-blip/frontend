@@ -25,7 +25,7 @@ const Settings = ({ darkMode, onLogout }) => {
         const username = localStorage.getItem('username');
         if (!username) return;
         try {
-            const res = await axios.get(`https://colly-1-iw6c.onrender.com/api/user/${username}`);
+            const res = await axios.get(`https://backend-colly.onrender.com//api/user/${username}`);
             const user = res.data;
             setIsPrivate(user.isPrivate || false);
             setActivityStatus(user.activityStatus !== false); 
@@ -51,7 +51,7 @@ const Settings = ({ darkMode, onLogout }) => {
 
     const userId = localStorage.getItem('userId');
     try {
-        await axios.put('https://colly-1-iw6c.onrender.com/api/user/settings', { userId, [key]: value });
+        await axios.put('https://backend-colly.onrender.com//api/user/settings', { userId, [key]: value });
     } catch (err) { console.error("Save Failed"); }
   };
 
@@ -65,7 +65,7 @@ const Settings = ({ darkMode, onLogout }) => {
       if (selectedFile) formData.append('profilePic', selectedFile);
       
       try {
-          const res = await axios.put('https://colly-1-iw6c.onrender.com/api/user/profile', formData, {
+          const res = await axios.put('https://backend-colly.onrender.com//api/user/profile', formData, {
               headers: { 'Content-Type': 'multipart/form-data' }
           });
           if(res.data.success) {

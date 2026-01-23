@@ -26,7 +26,7 @@ const Search = ({ isDarkMode, query: propQuery }) => {
       if(!val) return;
       setLoading(true);
       try {
-        const res = await axios.get(`https://colly-1-iw6c.onrender.com/api/user/${val}`);
+        const res = await axios.get(`https://backend-colly.onrender.com//api/user/${val}`);
         if (res.data) {
            setUserResults(Array.isArray(res.data) ? res.data : [res.data]);
         } else {
@@ -48,7 +48,7 @@ const Search = ({ isDarkMode, query: propQuery }) => {
   const handleFollow = async (targetUserId) => {
     const currentUserId = localStorage.getItem('userId');
     try {
-      const res = await axios.post('https://colly-1-iw6c.onrender.com/api/user/follow', { currentUserId, targetUserId });
+      const res = await axios.post('https://backend-colly.onrender.com//api/user/follow', { currentUserId, targetUserId });
       if (res.data.success) {
         if (res.data.isFollowing) setFollowingIds([...followingIds, targetUserId]);
         else setFollowingIds(followingIds.filter(id => id !== targetUserId));

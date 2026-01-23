@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Logo from "./components/Logo";
 
 const AuthPage = (props) => {
-  const [mode, setMode] = useState("Login");
+  const [mode, setMode] = useState("login");
   const [leftRandomPositions, setLeftRandomPositions] = useState([]);
 
   const [formData, setFormData] = useState({
@@ -15,7 +15,7 @@ const AuthPage = (props) => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("https://colly-1-iw6c.onrender.com/login", {
+      const res = await fetch("https://backend-colly.onrender.com//login", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ identifier: formData.email, password: formData.password })
       });
@@ -32,7 +32,7 @@ const AuthPage = (props) => {
   const handleSignupStart = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("https://colly-1-iw6c.onrender.com/send-signup-otps", {
+      const res = await fetch("https://backend-colly.onrender.com//send-signup-otps", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: formData.email, phone: formData.phone })
       });
@@ -49,7 +49,7 @@ const AuthPage = (props) => {
       : { identifier: formData.email, otp: formData.otp, newPassword: formData.newPassword };
 
     try {
-      const res = await fetch(`https://colly-1-iw6c.onrender.com/${url}`, {
+      const res = await fetch(`https://backend-colly.onrender.com//${url}`, {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
       });
       if (res.ok) { alert("Welcome to Colly ✨"); setMode("login"); }
@@ -60,7 +60,7 @@ const AuthPage = (props) => {
   const handleForgotStart = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("https://colly-1-iw6c.onrender.com/forgot-password-otp", {
+      const res = await fetch("https://backend-colly.onrender.com//forgot-password-otp", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ identifier: formData.email })
       });
