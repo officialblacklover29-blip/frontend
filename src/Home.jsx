@@ -3,7 +3,7 @@ import axios from 'axios';
 import { UserContext } from './context/UserContext'; 
 
 // Components Imports
-import Logo from './components/Logo'; 
+import Logo from './components/Logo';
 import Profile from './pages/Profile';
 import Messages from './pages/Messages';
 import Notifications from './pages/Notifications';
