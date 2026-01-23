@@ -333,7 +333,7 @@ const Home = ({ onLogout }) => {
             ) : view === 'notifications' ? (
                 <Notifications />
             ) : view === 'settings' ? (  
-                <Settings onLogout={onLogout} />
+                <Settings onLogout={onLogout} darkMode={isDarkMode} />
             ) : (
                 <Search query={searchText} />
             )}
