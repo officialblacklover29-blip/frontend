@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useContext } from 'react'; 
+import React, { useState, useEffect, useContext, useRef } from 'react'; 
 import axios from 'axios'; 
 import { UserContext } from './context/UserContext'; 
 
-// Components Imports (Inhe waise hi rahne diya)
+// Components Imports
 import Logo from './components/Logo'; 
 import Profile from './pages/Profile';
 import Messages from './pages/Messages';
@@ -13,8 +13,8 @@ import Settings from './pages/Settings';
 const Home = ({ onLogout }) => {
   const { user } = useContext(UserContext); 
   
+  // --- EXISTING STATES ---
   const [view, setView] = useState('feed'); 
-  const [selectedFile, setSelectedFile] = useState(null);
   const [posts, setPosts] = useState([]); 
   const [likedPosts, setLikedPosts] = useState([]); 
   const [savedPosts, setSavedPosts] = useState([]); 
@@ -28,45 +28,82 @@ const Home = ({ onLogout }) => {
   const [searchText, setSearchText] = useState("");
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  // --- 🎨 NEW ADDICTIVE THEME ---
+  // --- ✨ NEW STATES FOR PREMIUM FEATURES ---
+  
+  // 1. CHAT & SOCKET STATES
+  const [activeChatUser, setActiveChatUser] = useState(null); 
+  const [isChatOpen, setIsChatOpen] = useState(false); 
+  const [chatMessage, setChatMessage] = useState("");
+  const [chatHistory, setChatHistory] = useState([]); 
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  
+  // 👉 SOCKET REF (Isi variable ko use karna apne logic me)
+  const socket = useRef(); 
+
+  // 2. EDITOR STATES
+  const [editorFile, setEditorFile] = useState(null); // Selected file for editing
+  const [editorPreview, setEditorPreview] = useState(null);
+  const [editFilters, setEditFilters] = useState({ brightness: 100, contrast: 100, saturation: 100, sepia: 0 });
+  const [activeFilterTab, setActiveFilterTab] = useState('adjust');
+
+  // --- 🎨 PREMIUM ROYAL THEME (Dynamic) ---
   const theme = isDarkMode ? {
-    bg: "#0f0f10",            // Deep Black
-    glass: "rgba(30, 30, 30, 0.70)", // Dark Glass
-    card: "#18181b",
-    textMain: "#ffffff",
-    textLight: "#a1a1aa",
-    primary: "#f43f5e",       // Rose Red (Addictive Color)
-    border: "rgba(255,255,255,0.1)",
-    shadow: "0 10px 40px -10px rgba(0,0,0,0.5)"
+    bg: "#121212",            // Deep Black
+    card: "#1E1E1E",          // Dark Card
+    primary: "#A18167",       // Colly Gold
+    textMain: "#E4E6EB",      
+    textLight: "#B0B3B8",     
+    border: "#333333",        
+    shadow: "0 4px 20px rgba(0,0,0,0.5)",
+    inputBg: "#2C2C2C",
+    goldGradient: "linear-gradient(135deg, #A18167 0%, #8B6F58 100%)"
   } : {
-    bg: "#f0f2f5",            // Soft Grey (FB/Twitter vibe)
-    glass: "rgba(255, 255, 255, 0.85)", // Light Glass
-    card: "#ffffff",
-    textMain: "#18181b",
-    textLight: "#71717a",
-    primary: "#E1306C",       // Insta-like Pink/Red
-    border: "rgba(0,0,0,0.05)",
-    shadow: "0 8px 30px rgba(0,0,0,0.08)"
+    bg: "#F9F7F2",            // ✨ Royal Off-White
+    card: "#FFFFFF",          // Pure White
+    primary: "#A18167",       // ✨ Colly Gold
+    textMain: "#331b03",      // Coffee Black
+    textLight: "#8C8681",     // Muted Brown
+    border: "#E8E4DC",        
+    shadow: "0 4px 20px rgba(161, 129, 103, 0.15)", // Gold tint shadow
+    inputBg: "#F0Ece6",
+    goldGradient: "linear-gradient(135deg, #A18167 0%, #Cebb9e 100%)"
   };
 
-  useEffect(() => {
-    const savedNotes = localStorage.getItem("colly_dev_notes");
-    if (savedNotes) setDevNotes(savedNotes);
-  }, []);
+  // Custom Emojis
+  const collyEmojis = ["🦁", "🏺", "🍂", "✨", "🧘", "🪔", "🤝", "🔱", "🚩", "🇮🇳"];
 
-  const handleNoteChange = (e) => {
-    const value = e.target.value;
-    setDevNotes(value);
-    localStorage.setItem("colly_dev_notes", value);
-  };
-
+  // --- INITIAL LOAD ---
   useEffect(() => {
     fetchPosts();
     const localSaved = JSON.parse(localStorage.getItem('colly_saved')) || [];
     setSavedPosts(localSaved);
+
+    // Dev Notes Load
+    const savedNotes = localStorage.getItem("colly_dev_notes");
+    if (savedNotes) setDevNotes(savedNotes);
+
+    // ============================================================
+    // ⚠️⚠️⚠️ YOUR SOCKET.IO LOGIC GOES HERE ⚠️⚠️⚠️
+    // ============================================================
+    /*
+      if(user) {
+         socket.current = io("https://your-backend-url");
+         socket.current.emit("addUser", user._id);
+         socket.current.on("getMessage", (data) => {
+             setChatHistory((prev) => [...prev, data]);
+         });
+      }
+    */
+    // ============================================================
+
   }, [view]); 
 
-  // --- BACKEND LOGIC (UNTOUCHED) ---
+  // --- FUNCTIONS ---
+  const handleNoteChange = (e) => {
+    setDevNotes(e.target.value);
+    localStorage.setItem("colly_dev_notes", e.target.value);
+  };
+
   const fetchPosts = async () => {
     try {
       const currentUserId = localStorage.getItem('userId');
@@ -76,13 +113,27 @@ const Home = ({ onLogout }) => {
     } catch (err) { console.error("Fetch Error:", err); }
   };
 
+  // --- EDITOR FILE SELECTION ---
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        setEditorFile(file);
+        setEditorPreview(URL.createObjectURL(file));
+        setView('create'); // Switch to Editor View
+    }
+  };
+
+  // --- UPLOAD (Modified for Editor) ---
   const handleUpload = async () => {
     const currentUserId = localStorage.getItem('userId');
-    if (!selectedFile) return alert("Please select a photo first!");
+    if (!editorFile) return alert("Please select a photo first!");
+    
+    alert("Applying Premium Filters & Uploading... 🚀");
+
     const data = new FormData();
-    data.append('photo', selectedFile);
+    data.append('photo', editorFile); // In real app, you'd send the edited canvas blob
     data.append('userId', currentUserId); 
-    data.append('title', postText || "Colly Moment"); 
+    data.append('title', postText || "Colly Premium Moment ✨"); 
 
     try {
       const res = await axios.post('https://backend-colly.onrender.com/api/upload', data, {
@@ -90,14 +141,15 @@ const Home = ({ onLogout }) => {
       });
       if (res.data.success) {
         setPosts([res.data.post, ...posts]);
-        setSelectedFile(null);
+        setEditorFile(null); // Clear editor
         setPostText("");
-        // alert("Moment Uploaded! 🔥"); // Alert hata diya for smooth UX
+        setView('feed'); // Go back to feed
         fetchPosts(); 
       }
     } catch (err) { alert("Upload failed!"); }
   };
 
+  // --- OTHER ACTIONS (Like, Comment, Save, Delete) ---
   const handleLike = async (postId) => {
     try {
       const res = await axios.put(`https://backend-colly.onrender.com/api/posts/${postId}/like`);
@@ -120,8 +172,10 @@ const Home = ({ onLogout }) => {
     const exists = currentSaved.find(p => p._id === post._id);
     if (exists) {
       currentSaved = currentSaved.filter(p => p._id !== post._id);
+      alert("Removed from collections!");
     } else {
       currentSaved.push(post);
+      alert("Saved to Collections 🔖");
     }
     localStorage.setItem('colly_saved', JSON.stringify(currentSaved));
     setSavedPosts(currentSaved);
@@ -142,246 +196,308 @@ const Home = ({ onLogout }) => {
     alert("Link copied! 🔗");
   };
 
-  // --- 🔥 NEW STYLES ---
+  // --- CHAT MESSAGE SEND ---
+  const handleSendMessage = (e) => {
+      e.preventDefault();
+      if(!chatMessage.trim()) return;
+
+      // Update UI Immediately
+      const newMsg = { sender: 'me', text: chatMessage, time: Date.now() };
+      setChatHistory([...chatHistory, newMsg]); 
+      
+      // 👉 Emit Socket Event Here
+      // socket.current.emit("sendMessage", { ... });
+
+      setChatMessage("");
+  };
+
+  // --- STYLES OBJECT ---
   const styles = {
-    page: { backgroundColor: theme.bg, minHeight: "100vh", fontFamily: "'Inter', sans-serif", color: theme.textMain, transition: '0.3s' },
+    page: { backgroundColor: theme.bg, minHeight: "100vh", fontFamily: "'Verdana', sans-serif", color: theme.textMain, transition: '0.3s' },
     
     // Navbar
-    navbar: { 
-        backgroundColor: theme.glass, backdropFilter: "blur(12px)", height: "65px", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 30px", 
-        position: "sticky", top: 0, zIndex: 1000, borderBottom: `1px solid ${theme.border}` 
-    },
-    logoText: { fontSize: "26px", fontWeight: "800", background: `linear-gradient(45deg, ${theme.primary}, #FF8C00)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", cursor: 'pointer', letterSpacing: '-1px' },
-    searchBar: { padding: '10px 20px', borderRadius: '30px', border: 'none', backgroundColor: isDarkMode ? '#27272a' : '#f0f2f5', width: '350px', outline: 'none', color: theme.textMain, fontSize: '14px', transition: '0.2s' },
+    navbar: { backgroundColor: theme.card, height: "65px", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 40px", position: "sticky", top: 0, zIndex: 100, boxShadow: theme.shadow, borderBottom: `1px solid ${theme.border}`, transition: '0.3s' },
+    logoText: { fontSize: "26px", fontWeight: "bold", color: theme.primary, fontFamily: "'Playfair Display', serif", letterSpacing: "1px" },
+    searchBar: { padding: '10px 20px', borderRadius: '25px', border: 'none', backgroundColor: theme.inputBg, width: '300px', outline: 'none', color: theme.textMain },
     
     // Layout
-    container: { display: "flex", justifyContent: "center", paddingTop: "20px", gap: "30px", maxWidth: "1250px", margin: "0 auto" },
+    container: { display: "flex", justifyContent: "center", paddingTop: "25px", gap: "30px", maxWidth: "1300px", margin: "0 auto", paddingBottom: "50px" },
     
-    // Sidebar (Glassy & Sticky)
+    // Sidebar
     leftSidebar: { width: "260px", position: "sticky", top: "90px", height: "fit-content", display: window.innerWidth < 900 ? 'none' : 'block' },
-    menuCard: { backgroundColor: theme.card, borderRadius: "16px", padding: "15px", boxShadow: theme.shadow, border: `1px solid ${theme.border}` },
-    menuItem: { padding: "14px 18px", cursor: "pointer", borderRadius: "12px", display: "flex", alignItems: "center", gap: "15px", fontSize: "16px", fontWeight: "600", color: theme.textLight, transition: "all 0.2s ease", marginBottom: '5px' },
-    menuItemActive: { backgroundColor: theme.primary, color: '#fff', transform: 'scale(1.02)', boxShadow: '0 4px 15px rgba(225, 48, 108, 0.3)' },
+    menuCard: { backgroundColor: theme.card, borderRadius: "16px", padding: "15px", boxShadow: theme.shadow },
+    menuItem: { padding: "12px 15px", cursor: "pointer", borderRadius: "10px", display: "flex", alignItems: "center", gap: "15px", fontSize: "15px", fontWeight: "500", color: theme.textMain, transition: "0.2s" },
+    activeItem: { backgroundColor: theme.bg, color: theme.primary, fontWeight: 'bold', borderLeft: `4px solid ${theme.primary}` },
 
-    // Feed Area
-    feed: { width: "100%", maxWidth: "620px", display: "flex", flexDirection: "column", gap: "25px", paddingBottom: "100px" },
+    // Create Button (Replaced Logout)
+    createBtn: { width: '100%', padding: '14px', marginTop: '15px', borderRadius: '30px', border: 'none', background: theme.goldGradient, color: 'white', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 4px 15px rgba(161, 129, 103, 0.4)' },
+
+    // Feed
+    feed: { width: "100%", maxWidth: "650px", display: "flex", flexDirection: "column", gap: "25px" },
     
-    // Stories Bar (NEW!)
-    storiesContainer: { display: 'flex', gap: '15px', padding: '15px 0', overflowX: 'auto', scrollbarWidth: 'none' },
-    storyCircle: { width: '65px', height: '65px', borderRadius: '50%', padding: '3px', background: `linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)`, cursor: 'pointer', transition: 'transform 0.2s' },
-    storyImg: { width: '100%', height: '100%', borderRadius: '50%', border: `3px solid ${theme.card}`, objectFit: 'cover' },
-
-    // Create Post (Minimalist)
-    createBox: { backgroundColor: theme.card, borderRadius: "16px", padding: "20px", boxShadow: theme.shadow, border: `1px solid ${theme.border}` },
-    createInput: { width: '100%', padding: "15px", borderRadius: "12px", border: "none", backgroundColor: isDarkMode ? '#27272a' : '#f0f2f5', outline: "none", fontSize: "16px", color: theme.textMain, marginBottom: '15px' },
-    postBtn: { padding: "10px 25px", borderRadius: "25px", border: "none", backgroundColor: theme.primary, color: "#fff", fontWeight: "bold", cursor: "pointer", boxShadow: '0 4px 12px rgba(225, 48, 108, 0.4)', transition: '0.2s' },
-
-    // Post Card (Immersive)
-    postCard: { backgroundColor: theme.card, borderRadius: "20px", boxShadow: theme.shadow, border: `1px solid ${theme.border}`, overflow: "hidden", position: 'relative' },
+    // Post Card
+    postCard: { backgroundColor: theme.card, borderRadius: "20px", boxShadow: theme.shadow, overflow: "hidden", border: `1px solid ${theme.border}` },
     postHeader: { padding: "15px", display: "flex", alignItems: "center", justifyContent: "space-between" },
-    postImg: { width: "100%", display: "block", maxHeight: "650px", objectFit: "cover" },
-    actionRow: { padding: "12px 15px", display: "flex", gap: "25px" },
-    iconBtn: { cursor: "pointer", fontSize: "24px", transition: "transform 0.1s", color: theme.textMain },
+    postImg: { width: "100%", height: "auto", display: "block", maxHeight: "600px", objectFit: "cover" },
+    postActions: { padding: "15px", display: "flex", gap: "20px", borderBottom: `1px solid ${theme.border}` },
     
     // Right Sidebar
-    rightSidebar: { width: "300px", position: "sticky", top: "90px", height: "fit-content", display: window.innerWidth < 1100 ? 'none' : 'block' },
-    trendCard: { backgroundColor: theme.card, borderRadius: "16px", padding: "20px", boxShadow: theme.shadow, border: `1px solid ${theme.border}` },
+    rightSidebar: { width: "280px", position: "sticky", top: "90px", height: "fit-content", display: window.innerWidth < 1100 ? 'none' : 'block' },
+    
+    // 🔥 EDITOR STYLES
+    editorContainer: { backgroundColor: theme.card, borderRadius: "20px", padding: "20px", boxShadow: theme.shadow, border: `1px solid ${theme.primary}` },
+    previewImg: { width: '100%', maxHeight: '500px', objectFit: 'contain', borderRadius: '10px', filter: `brightness(${editFilters.brightness}%) contrast(${editFilters.contrast}%) saturate(${editFilters.saturation}%) sepia(${editFilters.sepia}%)` },
+    controlsArea: { marginTop: '20px', padding: '20px', backgroundColor: theme.bg, borderRadius: '15px' },
+
+    // 🔥 CHAT POPUP STYLES
+    chatWindow: { position: 'fixed', bottom: 0, right: '80px', width: '340px', height: '460px', backgroundColor: theme.card, borderRadius: '15px 15px 0 0', boxShadow: "0 -5px 30px rgba(0,0,0,0.2)", display: 'flex', flexDirection: 'column', zIndex: 9999, border: `1px solid ${theme.primary}`, overflow: 'hidden' },
+    chatHeader: { padding: '12px 15px', background: theme.primary, color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' },
+    msgBubble: { padding: '8px 12px', borderRadius: '18px', maxWidth: '75%', fontSize: '13px', lineHeight: '1.4', marginBottom: '8px' }
   };
 
   return (
     <div style={styles.page}>
       
-      {/* 1. GLASS NAVBAR */}
+      {/* 1. NAVBAR */}
       <div style={styles.navbar}>
-        <div style={{display: 'flex', alignItems: 'center', gap: '10px'}} onClick={() => setView('feed')}>
-           <img src="/collylogo.png" alt="logo" style={{width: '32px', height: '32px'}} />
-           <span style={styles.logoText}>Colly.</span>
+        <div style={{display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer'}} onClick={() => setView('feed')}>
+            <img src="/collylogo.png" alt="logo" style={{width: '35px', height: '35px'}} />
+            <span style={styles.logoText}>COLLY</span>
         </div>
         
         <input 
-            placeholder="Search for inspiration..." 
-            style={styles.searchBar} 
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && setView('search')}
+            placeholder="Search Colly..." style={styles.searchBar} 
+            value={searchText} onChange={(e) => setSearchText(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') setView('search'); }}
         />
 
         <div style={{display: 'flex', gap: '20px', alignItems: 'center'}}>
-            <button onClick={() => setIsDarkMode(!isDarkMode)} style={{background:'none', border:'none', fontSize:'22px', cursor:'pointer'}}>{isDarkMode ? '🌙' : '☀️'}</button>
-            <img src={user?.profilePic || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} style={{width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer', objectFit: 'cover', border: `2px solid ${theme.primary}`}} onClick={() => setView('profile')} alt="profile" />
+            <button onClick={() => setIsDarkMode(!isDarkMode)} style={{background: 'none', border: 'none', fontSize: '22px', cursor: 'pointer'}}>
+              {isDarkMode ? '☀️' : '🌙'}
+            </button>
+            <button onClick={onLogout} style={{padding: '8px 20px', borderRadius: '20px', border: `1px solid ${theme.primary}`, background: 'transparent', color: theme.primary, cursor: 'pointer', fontWeight: 'bold'}}>Logout</button>
+            <img 
+                src={user?.profilePic || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} 
+                style={{width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer', border: `2px solid ${theme.primary}`, objectFit: 'cover'}} 
+                onClick={() => setView('profile')} 
+                alt="profile" 
+            />
         </div>
       </div>
 
       <div style={styles.container}>
         
-        {/* 2. MODERN LEFT SIDEBAR */}
+        {/* 2. LEFT SIDEBAR */}
         <div style={styles.leftSidebar}>
            <div style={styles.menuCard}>
-               {[
-                 {id: 'feed', icon: '🏠', label: 'Home'},
-                 {id: 'search', icon: '🔍', label: 'Explore'},
-                 {id: 'messages', icon: '⚡', label: 'Messages'},
-                 {id: 'notifications', icon: '❤️', label: 'Activity'},
-                 {id: 'saved', icon: '🔖', label: 'Saved'},
-                 {id: 'settings', icon: '⚙️', label: 'Settings'},
-                 {id: 'profile', icon: '👤', label: 'Profile'}
-               ].map(item => (
-                   <div 
-                      key={item.id} 
-                      onClick={() => setView(item.id)} 
-                      style={view === item.id ? {...styles.menuItem, ...styles.menuItemActive} : styles.menuItem}
-                      onMouseEnter={(e) => {
-                          if(view !== item.id) e.currentTarget.style.backgroundColor = isDarkMode ? '#27272a' : '#f0f2f5';
-                      }}
-                      onMouseLeave={(e) => {
-                          if(view !== item.id) e.currentTarget.style.backgroundColor = 'transparent';
-                      }}
-                   >
-                       <span style={{fontSize: '20px'}}>{item.icon}</span>
-                       {item.label}
+               {['feed', 'search', 'messages', 'notifications', 'saved', 'settings', 'profile'].map(item => (
+                   <div key={item} onClick={() => setView(item)} 
+                        style={view === item ? {...styles.menuItem, ...styles.activeItem} : styles.menuItem}>
+                       <span>{item === 'feed' ? '🏠' : item === 'saved' ? '🔖' : item === 'messages' ? '💌' : '👤'}</span>
+                       {item.charAt(0).toUpperCase() + item.slice(1)}
                    </div>
                ))}
-               <div style={{...styles.menuItem, marginTop: '10px', color: '#ef4444'}} onClick={onLogout}>
-                  <span style={{fontSize: '20px'}}>🚪</span> Logout
-               </div>
+               
+               {/* ✨ NEW: Create Post Button (Replaced Logout) */}
+               <label style={styles.createBtn}>
+                   <input type="file" accept="image/*" onChange={handleFileSelect} style={{display:'none'}} />
+                   <span>➕ Create Post</span>
+               </label>
            </div>
         </div>
 
-        {/* 3. CENTER FEED (The Addiction Zone) */}
+        {/* 3. CENTER CONTENT */}
         <div style={styles.feed}>
             
-            {view === 'feed' && (
-              <>
-                {/* STORIES SECTION (Fake Data for Visuals) */}
-                <div style={styles.storiesContainer}>
-                   <div style={{display:'flex', flexDirection:'column', alignItems:'center', gap:'5px'}}>
-                      <div style={{...styles.storyCircle, background: 'none', border: `2px dashed ${theme.primary}`, padding: '2px'}}>
-                        <img src={user?.profilePic} style={{...styles.storyImg, border: 'none'}} alt="" />
-                      </div>
-                      <span style={{fontSize:'11px', fontWeight:'600'}}>You</span>
-                   </div>
-                   {[1,2,3,4,5].map(i => (
-                     <div key={i} style={{display:'flex', flexDirection:'column', alignItems:'center', gap:'5px'}}>
-                        <div style={styles.storyCircle}>
-                          <img src={`https://loremflickr.com/100/100/person?random=${i}`} style={styles.storyImg} alt="" />
-                        </div>
-                        <span style={{fontSize:'11px', color: theme.textLight}}>User {i}</span>
-                     </div>
-                   ))}
-                </div>
-
-                {/* CREATE POST */}
-                <div style={styles.createBox}>
-                    <div style={{display:'flex', gap:'15px'}}>
-                       <img src={user?.profilePic} style={{width:'45px', height:'45px', borderRadius:'50%', objectFit:'cover'}} alt=""/>
-                       <input 
-                         placeholder="What's sparking joy today?" 
-                         style={styles.createInput} 
-                         value={postText}
-                         onChange={(e) => setPostText(e.target.value)}
-                       />
+            {/* --- EDITOR VIEW (Shows when file selected) --- */}
+            {view === 'create' && editorFile ? (
+                <div style={styles.editorContainer}>
+                    <div style={{display:'flex', justifyContent:'space-between', marginBottom:'15px'}}>
+                        <h3 style={{margin:0, color: theme.primary, fontFamily:"'Playfair Display', serif"}}>✨ Studio Editor</h3>
+                        <button onClick={() => { setView('feed'); setEditorFile(null); }} style={{background:'transparent', border:'none', fontSize:'20px', cursor:'pointer', color: theme.textMain}}>✖</button>
                     </div>
-                    <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", paddingLeft: '60px'}}>
-                        <label style={{cursor: "pointer", color: theme.primary, fontWeight: "600", display:'flex', alignItems:'center', gap:'8px'}}>
-                            <input type="file" onChange={(e) => setSelectedFile(e.target.files[0])} style={{display: 'none'}} />
-                            📷 Photo/Video
-                        </label>
-                        <button onClick={handleUpload} style={styles.postBtn}>Post</button>
+
+                    <div style={{textAlign:'center', backgroundColor:'#000', borderRadius:'10px', padding:'10px'}}>
+                        <img src={editorPreview} style={styles.previewImg} alt="Preview" />
                     </div>
-                </div>
+                    
+                    {/* Caption Input */}
+                    <input 
+                       placeholder={`Caption for ${user?.username}...`}
+                       style={{width:'100%', padding:'15px', marginTop:'15px', borderRadius:'10px', border:`1px solid ${theme.border}`, background: theme.inputBg, color: theme.textMain, outline:'none'}}
+                       value={postText} onChange={e => setPostText(e.target.value)}
+                    />
 
-                {/* POSTS FEED */}
-                {posts.map(post => (
-                  <div key={post._id} style={styles.postCard}>
-                      <div style={styles.postHeader}>
-                          <div style={{display: "flex", alignItems: "center", gap: "12px"}}>
-                              <img src={post.owner?.profilePic || "https://loremflickr.com/100/100/people?random=1"} style={{width:'42px', height:'42px', borderRadius:'50%', objectFit:'cover'}} alt="" />
-                              <div>
-                                  <h4 style={{margin: 0, fontSize: '15px', color: theme.textMain}}>{post.owner?.username || 'user'}</h4>
-                                  <p style={{margin: 0, fontSize: '12px', color: theme.textLight}}>Just now • India</p>
-                              </div>
-                          </div>
-                          <span onClick={() => handleDelete(post)} style={{cursor: 'pointer', color: theme.textLight}}>•••</span>
-                      </div>
-                      
-                      <img src={post.img} style={styles.postImg} alt="Post" onDoubleClick={() => handleLike(post._id)} />
-                      
-                      <div style={styles.actionRow}>
-                          <span onClick={() => handleLike(post._id)} style={{...styles.iconBtn, color: likedPosts.includes(post._id) ? '#E1306C' : theme.textMain}}>
-                              {likedPosts.includes(post._id) ? '❤️' : '🤍'}
-                          </span>
-                          <span onClick={() => handleComment(post._id)} style={styles.iconBtn}>💬</span>
-                          <span onClick={() => handleShare(post)} style={styles.iconBtn}>🚀</span>
-                          <span onClick={() => handleSave(post)} style={{...styles.iconBtn, marginLeft: 'auto', color: savedPosts.find(p => p._id === post._id) ? theme.primary : theme.textMain}}>
-                              {savedPosts.find(p => p._id === post._id) ? '🔖' : '💾'}
-                          </span>
-                      </div>
-                      
-                      <div style={{padding: "0 15px 15px"}}>
-                          <p style={{margin: '0 0 8px 0', fontSize: '14px', fontWeight: 'bold'}}>{post.likes || 0} likes</p>
-                          <p style={{margin: 0, fontSize: '14px', lineHeight: '1.5'}}>
-                              <strong style={{marginRight: '8px'}}>{post.owner?.username}</strong> 
-                              {post.title}
-                          </p>
-                      </div>
-                  </div>
-                ))}
-              </>
-            )}
-
-            {/* RENDER OTHER VIEWS (Profile, Settings etc) INSIDE FEED AREA FOR MOBILE OR CENTER LAYOUT */}
-            {view === 'saved' && (
-                <div>
-                   <h2 style={{margin:'20px 0'}}>Your Collection</h2>
-                   {savedPosts.length === 0 ? <p>Nothing saved yet.</p> : savedPosts.map(post => (
-                       <div key={post._id} style={{...styles.postCard, marginBottom:'20px'}}>
-                           <img src={post.img} style={{width:'100%', height:'200px', objectFit:'cover'}} alt=""/>
-                           <div style={{padding:'15px'}}>{post.title}</div>
+                    <div style={styles.controlsArea}>
+                       <div style={{display:'flex', gap:'15px', marginBottom:'20px', borderBottom:`1px solid ${theme.border}`, paddingBottom:'10px'}}>
+                          <span onClick={()=>setActiveFilterTab('adjust')} style={{fontWeight:'bold', color: activeFilterTab==='adjust'?theme.primary: theme.textLight, cursor:'pointer'}}>Adjustments</span>
+                          <span onClick={()=>setActiveFilterTab('filters')} style={{fontWeight:'bold', color: activeFilterTab==='filters'?theme.primary: theme.textLight, cursor:'pointer'}}>Filters</span>
                        </div>
-                   ))}
+
+                       {activeFilterTab === 'adjust' ? (
+                           <div style={{display:'flex', flexDirection:'column', gap:'15px'}}>
+                              <label style={{color: theme.textMain}}>Brightness</label>
+                              <input type="range" min="50" max="150" value={editFilters.brightness} onChange={(e)=>setEditFilters({...editFilters, brightness: e.target.value})} style={{accentColor: theme.primary}} />
+                              
+                              <label style={{color: theme.textMain}}>Contrast</label>
+                              <input type="range" min="50" max="150" value={editFilters.contrast} onChange={(e)=>setEditFilters({...editFilters, contrast: e.target.value})} style={{accentColor: theme.primary}} />
+                           </div>
+                       ) : (
+                           <div style={{display:'flex', gap:'10px', overflowX:'auto'}}>
+                              {['Original','Vintage','B&W','Warm', 'Sepia'].map(f => (
+                                  <button key={f} onClick={()=>{
+                                      if(f==='Vintage') setEditFilters({...editFilters, sepia:40, contrast: 110});
+                                      if(f==='B&W') setEditFilters({...editFilters, saturation:0});
+                                      if(f==='Warm') setEditFilters({...editFilters, sepia:20, brightness: 105});
+                                      if(f==='Sepia') setEditFilters({...editFilters, sepia:100});
+                                      if(f==='Original') setEditFilters({brightness:100, contrast:100, saturation:100, sepia:0});
+                                  }} style={{padding:'8px 15px', border:`1px solid ${theme.primary}`, borderRadius:'20px', background: theme.bg, color: theme.textMain, cursor:'pointer'}}>{f}</button>
+                              ))}
+                           </div>
+                       )}
+                       
+                       <button onClick={handleUpload} style={{...styles.createBtn, marginTop:'20px'}}>Publish Moment 🚀</button>
+                    </div>
                 </div>
+
+            /* --- OTHER VIEWS --- */
+            ) : view === 'profile' ? ( <Profile darkMode={isDarkMode} />
+            ) : view === 'settings' ? ( <Settings onLogout={onLogout} darkMode={isDarkMode} />
+            ) : view === 'messages' ? ( <Messages darkMode={isDarkMode} />
+            ) : view === 'notifications' ? ( <Notifications />
+            ) : view === 'search' ? ( <Search query={searchText} />
+            ) : view === 'saved' ? (
+                /* Saved Page UI */
+                <div>
+                    <h3 style={{color: theme.primary, padding: '10px'}}>My Collections 🔖</h3>
+                    {savedPosts.length === 0 ? <p style={{padding:'10px'}}>Empty.</p> : savedPosts.map(p => (
+                        <div key={p._id} style={{...styles.postCard, marginBottom: '15px', padding:'10px', display:'flex', gap:'15px'}}>
+                             <img src={p.img} style={{width:'80px', height:'80px', borderRadius:'10px', objectFit:'cover'}} alt=""/>
+                             <div><p style={{fontWeight:'bold'}}>{p.title}</p><button onClick={()=>handleSave(p)} style={{color:'red', background:'none', border:'none', cursor:'pointer'}}>Remove</button></div>
+                        </div>
+                    ))}
+                </div>
+
+            /* --- FEED VIEW --- */
+            ) : (
+                <>
+                  {posts.map(post => (
+                    <div key={post._id} style={styles.postCard}>
+                        <div style={styles.postHeader}>
+                            <div style={{display: "flex", alignItems: "center", gap: "12px"}}>
+                                <img src={post.owner?.profilePic || "https://loremflickr.com/100/100/people?random=1"} style={{width:'42px', height:'42px', borderRadius:'50%'}} alt="" />
+                                <div>
+                                    <h4 style={{margin: 0, fontSize: '15px', color: theme.textMain}}>{post.owner?.username || 'user'}</h4>
+                                    <p style={{margin: 0, fontSize: '11px', color: theme.textLight}}>Varanasi, India</p>
+                                </div>
+                            </div>
+                            <span onClick={() => handleDelete(post)} style={{cursor: 'pointer', fontSize: '20px', color: theme.textMain}}>⋮</span>
+                        </div>
+                        
+                        <img src={post.img} style={styles.postImg} alt="Post" onDoubleClick={() => handleLike(post._id)} />
+                        
+                        <div style={styles.postActions}>
+                            <span onClick={() => handleLike(post._id)} style={{cursor:'pointer', fontSize:'22px', color: likedPosts.includes(post._id) ? '#e0245e' : theme.textMain}}>
+                                {likedPosts.includes(post._id) ? '❤️' : '🤍'}
+                            </span>
+                            <span onClick={() => handleComment(post._id)} style={{cursor:'pointer', fontSize:'22px'}}>💬</span>
+                            <span onClick={() => handleShare(post)} style={{cursor:'pointer', fontSize:'22px'}}>🚀</span>
+                            <span onClick={() => handleSave(post)} style={{cursor:'pointer', fontSize:'22px', marginLeft: 'auto', color: savedPosts.find(p => p._id === post._id) ? theme.primary : theme.textMain}}>
+                                {savedPosts.find(p => p._id === post._id) ? '🔖' : '💾'}
+                            </span>
+                        </div>
+                        <div style={{padding: "0 15px 15px"}}>
+                            <p style={{margin: '0 0 8px 0', fontSize: '14px', fontWeight: 'bold'}}>{post.likes || 0} likes</p>
+                            <p style={{margin: 0, fontSize: '14px', lineHeight: '1.5'}}>
+                                <strong style={{marginRight: '8px'}}>{post.owner?.username || 'user'}</strong> 
+                                {post.title}
+                            </p>
+                        </div>
+                    </div>
+                  ))}
+                </>
             )}
-
-            {view === 'profile' && <Profile darkMode={isDarkMode} />}
-            {view === 'settings' && <Settings onLogout={onLogout} darkMode={isDarkMode} />}
-            {view === 'messages' && <Messages darkMode={isDarkMode}/>}
-            {view === 'notifications' && <Notifications />}
-            {view === 'search' && <Search query={searchText} />}
-
         </div>
 
-        {/* 4. RIGHT SIDEBAR (Trending) */}
+        {/* 4. RIGHT SIDEBAR (Click to Open Chat) */}
         <div style={styles.rightSidebar}>
-            <div style={styles.trendCard}>
-                <h4 style={{margin:'0 0 15px 0', color: theme.textLight, fontSize:'13px', letterSpacing:'1px'}}>TRENDING IN INDIA</h4>
-                {[
-                  {title: '#MahaKumbh2025', posts: '2.5M Posts', img: 'https://loremflickr.com/100/100/kumbh'},
-                  {title: '#IndianCricket', posts: '1.2M Posts', img: 'https://loremflickr.com/100/100/cricket'},
-                  {title: '#TechIndia', posts: '890K Posts', img: 'https://loremflickr.com/100/100/bangalore'}
-                ].map((trend, i) => (
-                   <div key={i} style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'20px', cursor:'pointer'}}>
-                       <img src={trend.img} style={{width:'45px', height:'45px', borderRadius:'10px', objectFit:'cover'}} alt=""/>
-                       <div>
-                           <div style={{fontWeight:'bold', fontSize:'14px'}}>{trend.title}</div>
-                           <div style={{fontSize:'12px', color: theme.textLight}}>{trend.posts}</div>
-                       </div>
-                   </div>
+            <div style={styles.menuCard}>
+                <p style={{fontSize: "13px", fontWeight: "bold", color: theme.textLight, marginBottom: "15px", textTransform: "uppercase"}}>Connections</p>
+                {/* Dummy Friends List */}
+                {[1,2,3,4].map(i => (
+                    <div key={i} onClick={() => { setIsChatOpen(true); setActiveChatUser({username: `Friend ${i}`, img: `https://loremflickr.com/100/100/people?random=${i}`}) }} 
+                         style={{display: "flex", alignItems: "center", gap: "12px", marginBottom: "15px", cursor: "pointer"}}>
+                        <div style={{position:'relative'}}>
+                           <img src={`https://loremflickr.com/100/100/people?random=${i}`} style={{width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover'}} alt="" />
+                           <div style={{width:'10px', height:'10px', background:'#31A24C', borderRadius:'50%', position:'absolute', bottom:0, right:0, border:'2px solid white'}}></div>
+                        </div>
+                        <p style={{margin: 0, fontSize: '14px', fontWeight: 'bold'}}>Friend {i}</p>
+                    </div>
                 ))}
-                <div style={{color: theme.primary, fontSize:'13px', cursor:'pointer', fontWeight:'bold'}}>Show more</div>
             </div>
             
-            <div style={{marginTop: '20px', textAlign:'center', fontSize:'12px', color: theme.textLight}}>
-                © 2026 Colly • Made with ❤️ in India
+            <div style={{marginTop: '20px', fontSize: '11px', color: theme.textLight, textAlign: 'center'}}>
+                © 2026 Colly • Incredible India 🇮🇳
             </div>
         </div>
 
       </div>
+      
+      {/* 🔥 CHAT POPUP WINDOW (Facebook Style) */}
+      {isChatOpen && activeChatUser && (
+          <div style={styles.chatWindow}>
+              {/* Header */}
+              <div style={styles.chatHeader} onClick={() => setIsChatOpen(false)}>
+                  <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
+                      <img src={activeChatUser.img} style={{width:'32px', height:'32px', borderRadius:'50%', border:'1px solid white'}} alt=""/>
+                      <span style={{fontWeight:'bold', fontSize:'14px'}}>{activeChatUser.username}</span>
+                  </div>
+                  <span style={{fontSize:'12px'}}>▼</span>
+              </div>
+              
+              {/* Messages Body */}
+              <div style={{flex:1, padding:'15px', backgroundColor: theme.bg, overflowY:'auto'}}>
+                  <div style={{textAlign:'center', fontSize:'11px', color: theme.textLight, marginBottom:'10px'}}>Today</div>
+                  {chatHistory.map((msg, idx) => (
+                      <div key={idx} style={{display:'flex', justifyContent: msg.sender==='me'?'flex-end':'flex-start'}}>
+                          <div style={{
+                              ...styles.msgBubble, 
+                              background: msg.sender==='me' ? theme.primary : theme.card,
+                              color: msg.sender==='me' ? 'white' : theme.textMain,
+                              border: msg.sender!=='me' ? `1px solid ${theme.border}` : 'none'
+                          }}>
+                              {msg.text}
+                          </div>
+                      </div>
+                  ))}
+              </div>
 
-      {/* DEVELOPER NOTE BUTTON (Same as before) */}
-      <div style={{ position: 'fixed', bottom: '30px', right: '30px', zIndex: 9999 }}>
-          <button onClick={() => setShowNoteBox(!showNoteBox)} style={{width: '50px', height: '50px', borderRadius: '50%', background: '#222', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '20px'}}>📝</button>
+              {/* Footer */}
+              <form onSubmit={handleSendMessage} style={{padding:'10px', background: theme.card, borderTop:`1px solid ${theme.border}`, display:'flex', gap:'10px', alignItems:'center'}}>
+                  <span onClick={()=>setShowEmojiPicker(!showEmojiPicker)} style={{cursor:'pointer', fontSize:'20px'}}>😊</span>
+                  <input 
+                     placeholder="Type a message..." 
+                     style={{flex:1, border:'none', outline:'none', background:'transparent', color: theme.textMain}} 
+                     value={chatMessage} 
+                     onChange={e=>setChatMessage(e.target.value)} 
+                  />
+                  <button type="submit" style={{border:'none', background:'transparent', color:theme.primary, fontWeight:'bold', cursor:'pointer'}}>Send</button>
+              </form>
+              
+              {/* Custom Colly Emojis */}
+              {showEmojiPicker && (
+                  <div style={{background: theme.bg, padding:'8px', display:'flex', gap:'8px', overflowX:'auto', borderTop:`1px solid ${theme.border}`}}>
+                      {collyEmojis.map(e=><span key={e} onClick={()=>setChatMessage(p=>p+e)} style={{fontSize:'22px', cursor:'pointer'}}>{e}</span>)}
+                  </div>
+              )}
+          </div>
+      )}
+
+      {/* DEV NOTES (Rakha hai kyunki aapne diya tha) */}
+      <div style={{ position: 'fixed', bottom: '30px', right: '30px', zIndex: 999 }}>
+          <button onClick={() => setShowNoteBox(!showNoteBox)} style={{width: '50px', height: '50px', borderRadius: '50%', background: theme.primary, color: 'white', border: 'none', cursor: 'pointer', fontSize: '24px', boxShadow:theme.shadow}}>📝</button>
           {showNoteBox && (
-              <textarea value={devNotes} onChange={handleNoteChange} style={{position:'absolute', bottom:'60px', right:'0', width:'250px', height:'200px', padding:'10px'}} />
+              <textarea value={devNotes} onChange={handleNoteChange} style={{position:'absolute', bottom:'60px', right:'0', width:'250px', height:'200px', padding:'10px', borderRadius:'10px', background:theme.card, color:theme.textMain}} />
           )}
       </div>
 
