@@ -43,37 +43,44 @@ const AuthPage = (props) => {
     } catch { alert("Server error."); }
   };
 
-  const handleFinalAction = async (e) => {
-    e.preventDefault();
-    const url = mode === "otp" ? "signup-verified" : "reset-password";
-    const body = mode === "otp"
-      ? { ...formData, emailOTP: formData.otp, phoneOTP: formData.otp, full_name: `${formData.full_name} ${formData.middle_name} ${formData.surname}` }
-      : { identifier: formData.email, otp: formData.otp, newPassword: formData.newPassword };
-
-    try {
-      // ✅ FIX: Double slash removed
-      const res = await fetch(`https://backend-colly.onrender.com/${url}`, {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
-      });
-      if (res.ok) { alert("Welcome to Colly ✨"); setMode("login"); }
-      else alert("Action Failed");
-    } catch { alert("Server error."); }
-  };
-
+  // ✅ 1. FORGOT PASSWORD START (URL Fixed)
   const handleForgotStart = async (e) => {
     e.preventDefault();
     try {
-      // ✅ FIX: Double slash removed
-      const res = await fetch("https://backend-colly.onrender.com/forgot-password-otp", {
+      // 🔴 Galti thi: '/forgot-password-otp' -> ✅ Sahi kiya: '/forgot-password'
+      const res = await fetch("https://backend-colly.onrender.com/forgot-password", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ identifier: formData.email })
       });
       const data = await res.json();
-      if (res.ok) { alert("✅ OTP Sent!"); setFormData({ ...formData, email: data.email }); setMode("reset"); } 
-      else alert(data.error);
+      if (res.ok) { 
+          alert("✅ OTP Sent to your email!"); 
+          // Agar backend se email wapis na aaye to formData wala hi use karo
+          setFormData({ ...formData, email: data.email || formData.email }); 
+          setMode("reset"); 
+      } 
+      else alert(data.error || "User not found");
     } catch { alert("Backend error."); }
   };
 
+  // ✅ 2. FINAL ACTION (Reset Password Payload Fixed)
+  const handleFinalAction = async (e) => {
+    e.preventDefault();
+    const url = mode === "otp" ? "signup-verified" : "reset-password";
+    
+    // 🔴 Galti thi: 'identifier' bhej rahe the -> ✅ Sahi kiya: 'email' bhejna hai
+    const body = mode === "otp"
+      ? { ...formData, emailOTP: formData.otp, phoneOTP: formData.otp, full_name: `${formData.full_name} ${formData.middle_name} ${formData.surname}` }
+      : { email: formData.email, otp: formData.otp, newPassword: formData.newPassword }; // 👈 'identifier' ko 'email' kar diya
+
+    try {
+      const res = await fetch(`https://backend-colly.onrender.com/${url}`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
+      });
+      if (res.ok) { alert("Success! Welcome to Colly ✨"); setMode("login"); }
+      else alert("Action Failed. Check OTP.");
+    } catch { alert("Server error."); }
+  };
   // --- BACKGROUND MASONRY IMAGES ---
   const pinImages = [
     "https://loremflickr.com/500/700/indian,festival?random=101", 
