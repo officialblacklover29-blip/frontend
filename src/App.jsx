@@ -1,32 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import AuthPage from './Login'; 
-import Home from './Home';
-// ✅ ADDED THIS IMPORT
-import { UserProvider } from './context/UserContext'; 
+import React, { useContext } from 'react'; // ✅ useContext import karo
+import { UserContext } from './context/UserContext'; // ✅ Context import
+import AuthPage from './pages/AuthPage'; 
+import Home from './pages/Home';
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { user } = useContext(UserContext); // ✅ Seedha Context se user maango
 
-  useEffect(() => {
-    if (localStorage.getItem("token")) setIsLoggedIn(true);
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.clear();
-    setIsLoggedIn(false);
-  };
+  // Hum localStorage bhi check kar sakte hain taaki refresh par jhatka na lage
+  const token = localStorage.getItem("token");
 
   return (
-    // ✅ ADDED PROVIDER WRAPPER HERE
-    <UserProvider>
-      <div className="App">
-        {!isLoggedIn ? (
-          <AuthPage onLoginSuccess={() => setIsLoggedIn(true)} />
-        ) : (
-          <Home onLogout={handleLogout} />
-        )}
-      </div>
-    </UserProvider>
+    <div className="App">
+      {/* Agar Context me User hai YA Token hai, to Home dikhao */}
+      {user || token ? (
+         <Home />
+      ) : (
+         <AuthPage />
+      )}
+    </div>
   );
 }
 
