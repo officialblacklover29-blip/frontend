@@ -1,7 +1,6 @@
 import React, { useContext } from 'react'; // ✅ useContext import karo
-import { UserContext } from './context/UserContext'; // ✅ Context import
-import AuthPage from './pages/AuthPage'; 
-import Home from './pages/Home';
+import { UserContext } from '../context/UserContext'; // ✅ Context import
+import AuthPage from './Login'; 
 
 function App() {
   const { user } = useContext(UserContext); // ✅ Seedha Context se user maango
