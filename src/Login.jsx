@@ -20,28 +20,57 @@ const AuthPage = () => {
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   // --- 🔥 API HANDLERS (Synced with your server.js) ---
+// ✅ handleLogin ke andar ye paste karo:
 
- // ✅ 1. LOGIN FUNCTION (Fixed)
-  const handleLogin = async (e) => {
+const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
+
     try {
-      // URL check kar lena: /api/login hona chahiye
-      const res = await fetch("https://colly-1-iw6c.onrender.com/api/login", { 
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: formData.email, password: formData.password })
-      });
-      const data = await res.json();
-      
-      if (res.ok) {
-        localStorage.setItem("userId", data.user._id);
-        setUser(data.user); // Context update zaroori hai
-      } else {
-        alert(data.error || "Login Failed ❌");
-      }
-    } catch (err) { alert("Server Connection Error (Try refreshing)"); }
-    finally { setLoading(false); }
-  };
+        // 1. Check karo hum bhej kya rahe hain?
+        console.log("📤 Sending Data:", formData); 
+
+        const res = await fetch("https://colly-1-iw6c.onrender.com/api/login", { 
+            method: "POST", 
+            headers: { "Content-Type": "application/json" },
+            // 👇 Yahan 'formData' use karo, 'y' nahi (agar tumhara state formData hai)
+            body: JSON.stringify({ 
+                email: formData.email, 
+                password: formData.password 
+            })
+        });
+
+        // 2. Status check karo
+        console.log("📡 Server Status:", res.status);
+
+        // 3. Jadoo: Pehle Text me lo, taaki error na aaye agar HTML aaya to
+        const rawText = await res.text();
+        console.log("📄 ASLI JAWAB (Raw Response):", rawText);
+
+        // 4. Ab koshish karo JSON banane ki
+        let data;
+        try {
+            data = JSON.parse(rawText);
+        } catch (jsonError) {
+            throw new Error("Server ne JSON nahi bheja! Shayad HTML error page hai.");
+        }
+        
+        // 5. Ab logic lagao
+        if (res.ok) {
+            console.log("✅ Login Success!");
+            localStorage.setItem("userId", data.user._id);
+            setUser(data.user);
+        } else {
+            alert(data.error || "Login Failed ❌");
+        }
+
+    } catch (err) { 
+        console.error("🔥 ERROR:", err);
+        alert("Check Console (F12) for details: " + err.message); 
+    } finally { 
+        setLoading(false); 
+    }
+};
 
   // ✅ 2. SIGNUP FUNCTION (Direct & Simple)
   const handleSignup = async (e) => {
