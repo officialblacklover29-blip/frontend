@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import Logo from "./components/Logo";
-import { UserContext } from '../context/UserContext'; 
+import { UserContext } from './context/UserContext'; 
 
 const AuthPage = () => {
   const { setUser } = useContext(UserContext);
