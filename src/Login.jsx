@@ -21,12 +21,13 @@ const AuthPage = () => {
 
   // --- 🔥 API HANDLERS (Synced with your server.js) ---
 
-  // 1. LOGIN (Uses /api/login)
+ // ✅ 1. LOGIN FUNCTION (Fixed)
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("https://backend-colly.onrender.com/api/login", { 
+      // URL check kar lena: /api/login hona chahiye
+      const res = await fetch("https://colly-1-iw6c.onrender.com/api/login", { 
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: formData.email, password: formData.password })
       });
@@ -34,22 +35,21 @@ const AuthPage = () => {
       
       if (res.ok) {
         localStorage.setItem("userId", data.user._id);
-        setUser(data.user); // Context update
-        // App.js will handle redirect
+        setUser(data.user); // Context update zaroori hai
       } else {
         alert(data.error || "Login Failed ❌");
       }
-    } catch (err) { alert("Server Connection Error"); }
+    } catch (err) { alert("Server Connection Error (Try refreshing)"); }
     finally { setLoading(false); }
   };
 
-  // 2. SIGNUP (Uses /api/signup - Direct & Hashed)
+  // ✅ 2. SIGNUP FUNCTION (Direct & Simple)
   const handleSignup = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      // Direct Signup se 'Invalid Credentials' fix hoga kyunki server waha HASH kar raha hai
-      const res = await fetch("https://backend-colly.onrender.com/api/signup", {
+      // Pura form data bhej rahe hain
+      const res = await fetch("https://colly-1-iw6c.onrender.com/api/signup", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           username: formData.username,
@@ -66,9 +66,9 @@ const AuthPage = () => {
       const data = await res.json();
       if (res.ok) {
         alert("✨ Account Created! Please Login.");
-        setMode("login");
+        setMode("login"); // Auto switch to login
       } else {
-        alert(data.error || "Signup Failed. Username/Email taken.");
+        alert(data.error || "Signup Failed");
       }
     } catch (err) { alert("Server Error."); }
     finally { setLoading(false); }
