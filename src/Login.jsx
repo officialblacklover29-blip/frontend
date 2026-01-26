@@ -80,7 +80,7 @@ const AuthPage = () => {
     setLoading(true);
     try {
       // Uses /forgot-password
-      const res = await fetch("https://backend-colly.onrender.com/forgot-password", {
+      const res = await fetch("https://colly-1-iw6c.onrender.com/forgot-password", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ identifier: formData.email })
       });
@@ -103,7 +103,7 @@ const AuthPage = () => {
     setLoading(true);
     try {
       // Uses /reset-password
-      const res = await fetch("https://backend-colly.onrender.com/reset-password", {
+      const res = await fetch("https://colly-1-iw6c.onrender.com/reset-password", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
             email: formData.email, 
