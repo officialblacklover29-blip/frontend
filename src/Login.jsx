@@ -55,22 +55,29 @@ const handleLogin = async (e) => {
             throw new Error("Server ne JSON nahi bheja! Shayad HTML error page hai.");
         }
         
-        // 5. Ab logic lagao
-        if (res.ok) {
-            console.log("✅ Login Success!");
-            localStorage.setItem("userId", data.user._id);
-            setUser(data.user);
-        } else {
-            alert(data.error || "Login Failed ❌");
-        }
+       // 5. Ab logic lagao
+if (res.ok) {
+  console.log("✅ Login Success!");
+  localStorage.setItem("userId", data.user._id);
 
-    } catch (err) { 
-        console.error("🔥 ERROR:", err);
-        alert("Check Console (F12) for details: " + err.message); 
-    } finally { 
-        setLoading(false); 
-    }
+  if (typeof setUser === "function") {
+    setUser(data.user);
+  } else {
+    console.error("❌ setUser is not a function. UserProvider missing or broken.");
+  }
+
+} else {
+  alert(data.error || "Login Failed ❌");
+}
+
+} catch (err) {
+  console.error("🔥 ERROR:", err);
+  alert("Something went wrong. Check console.");
+} finally {
+  setLoading(false);
+}
 };
+
 
   // ✅ 2. SIGNUP FUNCTION (Direct & Simple)
   const handleSignup = async (e) => {
