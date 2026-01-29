@@ -3,7 +3,7 @@ import Logo from "./components/Logo";
 import { UserContext } from "./context/UserContext.jsx"; 
 
 const AuthPage = () => {
-  const { setUser } = useContext(UserContext);
+  const { login } = useContext(UserContext);
   
   // Modes: 'login', 'signup', 'forgot' (Send OTP), 'reset' (Verify & Change)
   const [mode, setMode] = useState("login"); 
@@ -58,13 +58,9 @@ const handleLogin = async (e) => {
        // 5. Ab logic lagao
 if (res.ok) {
   console.log("✅ Login Success!");
-  localStorage.setItem("userId", data.user._id);
+  login(data.user, null); // context handles everything
 
-  if (typeof setUser === "function") {
-    setUser(data.user);
-  } else {
-    console.error("❌ setUser is not a function. UserProvider missing or broken.");
-  }
+
 
 } else {
   alert(data.error || "Login Failed ❌");
