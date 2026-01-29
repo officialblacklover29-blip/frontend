@@ -18,44 +18,59 @@ const AuthPage = () => {
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   // --- 📧 FLOW 1: SIGNUP & VERIFY ---
-  const handleSignupInit = async (e) => {
+  // ✅ 1. Signup OTP Bhejne Wala Function (Updated for 'otps')
+const handleSignupInit = async (e) => {
   e.preventDefault();
   setLoading(true);
   try {
-    // 👇 यहाँ आखिर में 's' जोड़ें ताकि बैकएंड से मैच हो सके
-    const res = await fetch(`${API_BASE}/send-signup-otps`, { 
-      method: "POST", 
+    // 👇 Yahan 'otps' (s ke saath) confirm kar diya hai
+    const res = await fetch(`${API_BASE}/send-signup-otps`, {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: formData.email })
     });
-    
+
     if (res.ok) {
-      alert("📧 Signup OTP sent to Gmail!");
-      setMode("verify_signup");
-    } else { 
-      alert("Signup OTP failed (Check Backend Route)"); 
+      alert("📧 Signup OTP sent! Check your Gmail.");
+      setMode("verify_signup"); // Isse otp dalne wala box khulega
+    } else {
+      const data = await res.json();
+      // Server error message yahan dikhega agar route galat hua
+      alert(data.error || "Signup OTP failed (Check Backend logs)");
     }
-  } catch (err) { 
-    alert("Server Connection Error"); 
-  } finally { 
-    setLoading(false); 
+  } catch (err) {
+    alert("Server Connection Error: Check if backend is live.");
+  } finally {
+    setLoading(false);
   }
 };
 
-  const handleVerifySignup = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/api/signup`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData }) 
-      });
-      if (res.ok) {
-        alert("🎉 Account Created!");
-        setMode("login");
-      } else { alert("Invalid Signup OTP ❌"); }
-    } catch (err) { alert("Server Error"); } finally { setLoading(false); }
-  };
+  // ✅ 2. OTP Verify aur Account Create karne wala function
+const handleVerifySignup = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  try {
+    // Backend mein ye '/api/signup' hai as per your last code
+    const res = await fetch(`${API_BASE}/api/signup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      // Isme otp ke saath baki details bhi ja rahi hain
+      body: JSON.stringify({ ...formData }) 
+    });
+
+    if (res.ok) {
+      alert("🎉 Account Created Successfully!");
+      setMode("login");
+    } else {
+      const data = await res.json();
+      alert(data.error || "Invalid OTP ❌");
+    }
+  } catch (err) {
+    alert("Server Error in verification.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   // --- 🔑 FLOW 2: FORGOT & RESET ---
   const handleForgotInit = async (e) => {
