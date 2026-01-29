@@ -64,17 +64,29 @@ const AuthPage = () => {
   };
 
   const handleResetFinal = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await fetch("https://colly-1-iw6c.onrender.com/reset-password", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: formData.email, otp: formData.otp, newPassword: formData.newPassword })
-      });
-      if (res.ok) { alert("🎉 Changed!"); setMode("login"); }
-    } catch (err) { alert("Error"); } finally { setLoading(false); }
-  };
+  e.preventDefault();
+  setLoading(true);
+  
+  // Logic: Agar newPassword hai to reset, nahi to signup verification
+  const endpoint = formData.newPassword ? "/reset-password" : "/api/verify-and-signup";
 
+  try {
+    const res = await fetch(`https://colly-1-iw6c.onrender.com${endpoint}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData) // Isme email aur otp hona zaroori hai
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      alert("✨ Success! Login now.");
+      setMode("login");
+    } else {
+      alert(data.error || "Verification failed!");
+    }
+  } catch (err) { alert("Server Connection Error"); }
+  finally { setLoading(false); }
+};
   const pinImages = [
     "https://loremflickr.com/500/700/indian,festival?random=101", "https://loremflickr.com/500/700/party,friends?random=102",    
     "https://loremflickr.com/500/700/indian,street,food?random=103", "https://loremflickr.com/500/700/marvel,superhero?random=104", 
