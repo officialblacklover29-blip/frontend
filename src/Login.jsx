@@ -19,19 +19,28 @@ const AuthPage = () => {
 
   // --- 📧 FLOW 1: SIGNUP & VERIFY ---
   const handleSignupInit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/send-signup-otps`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: formData.email })
-      });
-      if (res.ok) {
-        alert("📧 Signup OTP sent to Gmail!");
-        setMode("verify_signup");
-      } else { alert("Signup OTP failed"); }
-    } catch (err) { alert("Server Error"); } finally { setLoading(false); }
-  };
+  e.preventDefault();
+  setLoading(true);
+  try {
+    // 👇 यहाँ आखिर में 's' जोड़ें ताकि बैकएंड से मैच हो सके
+    const res = await fetch(`${API_BASE}/send-signup-otps`, { 
+      method: "POST", 
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: formData.email })
+    });
+    
+    if (res.ok) {
+      alert("📧 Signup OTP sent to Gmail!");
+      setMode("verify_signup");
+    } else { 
+      alert("Signup OTP failed (Check Backend Route)"); 
+    }
+  } catch (err) { 
+    alert("Server Connection Error"); 
+  } finally { 
+    setLoading(false); 
+  }
+};
 
   const handleVerifySignup = async (e) => {
     e.preventDefault();
