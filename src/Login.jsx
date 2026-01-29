@@ -4,11 +4,9 @@ import { UserContext } from "./context/UserContext.jsx";
 
 const AuthPage = () => {
   const { login } = useContext(UserContext);
-  
   const [mode, setMode] = useState("login"); 
   const [loading, setLoading] = useState(false);
   const [leftRandomPositions, setLeftRandomPositions] = useState([]);
-
   const API_BASE = "https://colly-1-iw6c.onrender.com";
 
   const [formData, setFormData] = useState({
@@ -19,45 +17,38 @@ const AuthPage = () => {
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  // --- API HANDLERS ---
-  const handleLogin = async (e) => {
+  // --- 📧 FLOW 1: SIGNUP & VERIFY ---
+  const handleSignupInit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-        const res = await fetch(`${API_BASE}/api/login`, { 
-            method: "POST", 
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email: formData.email, password: formData.password })
-        });
-        const data = await res.json();
-        if (res.ok) {
-          login(data.user, "colly_active_session"); 
-        } else {
-          alert(data.error || "Login Failed ❌");
-        }
-    } catch (err) { alert("Server Error."); }
-    finally { setLoading(false); }
-  };
-
-  const handleSignup = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/api/send-signup-otp`, {
+      const res = await fetch(`${API_BASE}/send-signup-otps`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: formData.email })
       });
       if (res.ok) {
-        alert("📧 OTP Sent to your Gmail!");
-        setMode("reset");
-      } else {
-        const data = await res.json();
-        alert(data.error || "Signup Failed");
-      }
-    } catch (err) { alert("Server Error."); }
-    finally { setLoading(false); }
+        alert("📧 Signup OTP sent to Gmail!");
+        setMode("verify_signup");
+      } else { alert("Signup OTP failed"); }
+    } catch (err) { alert("Server Error"); } finally { setLoading(false); }
   };
 
+  const handleVerifySignup = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/signup`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...formData }) 
+      });
+      if (res.ok) {
+        alert("🎉 Account Created!");
+        setMode("login");
+      } else { alert("Invalid Signup OTP ❌"); }
+    } catch (err) { alert("Server Error"); } finally { setLoading(false); }
+  };
+
+  // --- 🔑 FLOW 2: FORGOT & RESET ---
   const handleForgotInit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -68,35 +59,42 @@ const AuthPage = () => {
       });
       const data = await res.json();
       if (res.ok) {
-        alert(`✅ OTP Sent!`);
+        alert("🔑 Reset OTP sent to Gmail!");
         setFormData({ ...formData, email: data.email || formData.email });
-        setMode("reset");
-      } else { alert(data.error || "User not found."); }
-    } catch (err) { alert("Server Error."); }
-    finally { setLoading(false); }
+        setMode("reset_password");
+      } else { alert("User not found"); }
+    } catch (err) { alert("Server Error"); } finally { setLoading(false); }
   };
 
-  const handleResetFinal = async (e) => {
+  const handleResetPassword = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const endpoint = formData.newPassword ? "/reset-password" : "/api/verify-and-signup";
     try {
-      const res = await fetch(`${API_BASE}${endpoint}`, {
+      const res = await fetch(`${API_BASE}/reset-password`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({ email: formData.email, otp: formData.otp, newPassword: formData.newPassword })
       });
       if (res.ok) {
-        alert("🎉 Success! Account verified/Password changed.");
+        alert("✅ Password Changed!");
         setMode("login");
-      } else {
-        const data = await res.json();
-        alert(data.error || "Invalid OTP");
-      }
-    } catch (err) { alert("Server Error."); }
-    finally { setLoading(false); }
+      } else { alert("Invalid Reset OTP ❌"); }
+    } catch (err) { alert("Server Error"); } finally { setLoading(false); }
   };
 
-  // --- UI RESOURCES ---
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+        const res = await fetch(`${API_BASE}/api/login`, { 
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: formData.email, password: formData.password })
+        });
+        const data = await res.json();
+        if (res.ok) { login(data.user, "colly_active_session"); }
+        else { alert(data.error || "Login Failed"); }
+    } catch (err) { alert("Server Error"); } finally { setLoading(false); }
+  };
+
   const pinImages = [
     "https://loremflickr.com/500/700/indian,festival?random=101", "https://loremflickr.com/500/700/party,friends?random=102",    
     "https://loremflickr.com/500/700/indian,street,food?random=103", "https://loremflickr.com/500/700/marvel,superhero?random=104", 
@@ -108,8 +106,8 @@ const AuthPage = () => {
   const festivePopImages = [
     "https://loremflickr.com/150/150/taj,mahal?random=1", "https://loremflickr.com/150/150/holi,face?random=2",
     "https://loremflickr.com/150/150/diwali,diya?random=3", "https://loremflickr.com/150/150/indian,bride?random=4",
-    "https://loremflickr.com/150/150/shiva,statue?random=7", "https://loremflickr.com/150/150/masala,chai?random=10",
-    "https://loremflickr.com/150/150/varanasi,ghat?random=22", "https://loremflickr.com/150/150/india,gate?random=23",
+    "https://loremflickr.com/150/150/kathakali,dance?random=5", "https://loremflickr.com/150/150/shiva,statue?random=7",
+    "https://loremflickr.com/150/150/indian,market?random=8", "https://loremflickr.com/150/150/masala,chai?random=10",
   ];
 
   useEffect(() => {
@@ -141,46 +139,49 @@ const AuthPage = () => {
   };
 
   const renderForm = () => {
-    if (mode === "forgot" || mode === "reset") {
+    if (mode === "verify_signup") {
       return (
-        <form onSubmit={mode === "forgot" ? handleForgotInit : handleResetFinal}>
-          {mode === "forgot" ? (
-             <input name="email" placeholder="Enter Email" onChange={handleChange} style={styles.input} required />
-          ) : (
-             <>
-               <input name="otp" placeholder="Enter OTP" onChange={handleChange} style={styles.input} required />
-               <input name="newPassword" type="password" placeholder="New Password" onChange={handleChange} style={styles.input} required />
-             </>
-          )}
-          <button type="submit" style={styles.button}>{loading ? "..." : "Confirm"}</button>
-          <span style={styles.forgotLink} onClick={() => setMode("login")}>Back to Login</span>
+        <form onSubmit={handleVerifySignup}>
+          <p style={{color: "#fff", fontSize: "14px"}}>Verify Signup for {formData.email}</p>
+          <input name="otp" placeholder="Enter Signup OTP" onChange={handleChange} style={styles.input} required />
+          <button type="submit" style={styles.button}>{loading ? "Verifying..." : "Verify & Signup"}</button>
+          <span style={styles.forgotLink} onClick={() => setMode("signup")}>Back</span>
+        </form>
+      );
+    }
+    if (mode === "reset_password") {
+      return (
+        <form onSubmit={handleResetPassword}>
+          <p style={{color: "#fff", fontSize: "14px"}}>Reset Password for {formData.email}</p>
+          <input name="otp" placeholder="Enter Reset OTP" onChange={handleChange} style={styles.input} required />
+          <input name="newPassword" type="password" placeholder="New Password" onChange={handleChange} style={styles.input} required />
+          <button type="submit" style={styles.button}>{loading ? "Updating..." : "Update Password"}</button>
+          <span style={styles.forgotLink} onClick={() => setMode("login")}>Back</span>
         </form>
       );
     }
     if (mode === "signup") {
       return (
-        <form onSubmit={handleSignup}>
+        <form onSubmit={handleSignupInit}>
           <div style={styles.row}>
             <input name="full_name" placeholder="First name" onChange={handleChange} style={styles.input} required />
             <input name="surname" placeholder="Surname" onChange={handleChange} style={styles.input} required />
           </div>
-          <div style={styles.row}>
-              <div style={{ flex: 1.2 }}><input name="dob" type="date" onChange={handleChange} style={styles.input} required /></div>
-              <div style={{ flex: 1 }}>
-                 <select name="gender" onChange={handleChange} style={styles.input} required>
-                     <option value="">Gender</option>
-                     <option value="male">Male</option>
-                     <option value="female">Female</option>
-                 </select>
-              </div>
-          </div>
           <input name="email" placeholder="Email" onChange={handleChange} style={styles.input} required />
-          <input name="phone" placeholder="Phone" onChange={handleChange} style={styles.input} required />
           <input name="username" placeholder="Username" onChange={handleChange} style={styles.input} required />
           <input name="password" type="password" placeholder="Password" onChange={handleChange} style={styles.input} required />
-          <button type="submit" style={styles.button}>{loading ? "..." : "Sign Up"}</button>
+          <button type="submit" style={styles.button}>{loading ? "..." : "Get Signup OTP"}</button>
         </form>
       );
+    }
+    if (mode === "forgot") {
+        return (
+          <form onSubmit={handleForgotInit}>
+            <input name="email" placeholder="Enter Email or Username" onChange={handleChange} style={styles.input} required />
+            <button type="submit" style={styles.button}>{loading ? "..." : "Get Reset OTP"}</button>
+            <span style={styles.forgotLink} onClick={() => setMode("login")}>Back</span>
+          </form>
+        );
     }
     return (
       <form onSubmit={handleLogin}>
@@ -198,6 +199,7 @@ const AuthPage = () => {
           @keyframes scrollUp { 0% { transform: translateY(0); } 100% { transform: translateY(-50%); } }
           @keyframes scrollDown { 0% { transform: translateY(-50%); } 100% { transform: translateY(0); } }
           @keyframes popUpDown { 0%, 100% { transform: scale(0); opacity: 0; } 20%, 80% { transform: scale(1); opacity: 1; } }
+          body { margin: 0; overflow: hidden; }
       `}</style>
       
       <div style={styles.topLeftIconContainer}>
@@ -219,7 +221,7 @@ const AuthPage = () => {
       <div style={styles.rightSide}>
           <div style={{ marginBottom: '20px' }}><Logo /></div>
           <div style={styles.formCard}>
-              <h1 style={styles.title}>{mode === "login" ? "Login to Colly" : (mode === "signup" ? "Create Account" : "Reset Password")}</h1>
+              <h1 style={styles.title}>{mode === "login" ? "Login to Colly" : (mode === "signup" ? "Create Account" : (mode === "forgot" ? "Find Account" : "OTP Verification"))}</h1>
               {renderForm()}
               {(mode === "login" || mode === "signup") && (
                 <div style={styles.footer}>
