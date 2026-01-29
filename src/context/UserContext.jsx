@@ -23,16 +23,16 @@ export const UserProvider = ({ children }) => {
   }, []);
 
   const login = (userData, token) => {
-    localStorage.setItem('token', token);
-    localStorage.setItem('userId', userData._id);
-    localStorage.setItem('username', userData.username);
-    setUser(userData);
-  };
+  if (token) localStorage.setItem('token', token); // Sirf tabhi save karein jab token ho
+  localStorage.setItem('userId', userData._id);
+  localStorage.setItem('username', userData.username);
+  setUser(userData);
+};
 
   const logout = () => {
-    localStorage.clear();
-    setUser(null);
-    window.location.href = '/login';
+    localStorage.clear(); // Saara data saaf karo
+    setUser(null);        // State ko null karo
+    // window.location.href wali line hata do!
   };
 
   // ✅ Real-time Update (Photo change hone par turant dikhe)
