@@ -3,14 +3,14 @@ import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
 import { BrowserRouter } from 'react-router-dom'
-import { UserProvider } from '../context/UserContext'; // ✅ Provider yahan import karo
+import { UserProvider } from './context/UserContext.jsx'; // 'U' Capital rakhein
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <UserProvider> {/* ✅ Puri App ko wrap kar diya */}
+    <UserProvider>
       <BrowserRouter>
         <App />
       </BrowserRouter>
     </UserProvider>
-  </React.StrictMode>,
+  </React.StrictMode>
 )

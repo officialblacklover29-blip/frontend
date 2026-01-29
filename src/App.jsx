@@ -1,21 +1,16 @@
-import React, { useContext } from 'react'; // ✅ useContext import karo
-import { UserContext } from '../context/UserContext'; // ✅ Context import
+import React, { useContext } from 'react';
+import { UserContext } from './context/UserContext'; // Path check karein
 import AuthPage from './Login'; 
+import Home from './Home';
 
 function App() {
-  const { user } = useContext(UserContext); // ✅ Seedha Context se user maango
-
-  // Hum localStorage bhi check kar sakte hain taaki refresh par jhatka na lage
+  const { user } = useContext(UserContext);
   const token = localStorage.getItem("token");
 
   return (
     <div className="App">
-      {/* Agar Context me User hai YA Token hai, to Home dikhao */}
-      {user || token ? (
-         <Home />
-      ) : (
-         <AuthPage />
-      )}
+      {/* Agar user hai to Home, nahi to Login */}
+      {user || token ? <Home /> : <AuthPage />}
     </div>
   );
 }
