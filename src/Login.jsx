@@ -9,6 +9,8 @@ const AuthPage = () => {
   const [loading, setLoading] = useState(false);
   const [leftRandomPositions, setLeftRandomPositions] = useState([]);
 
+  const API_BASE = "https://colly-1-iw6c.onrender.com";
+
   const [formData, setFormData] = useState({
     full_name: "", surname: "", email: "", phone: "", 
     username: "", password: "", newPassword: "", otp: "", 
@@ -17,76 +19,84 @@ const AuthPage = () => {
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
+  // --- API HANDLERS ---
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-        const res = await fetch("https://colly-1-iw6c.onrender.com/api/login", { 
+        const res = await fetch(`${API_BASE}/api/login`, { 
             method: "POST", 
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email: formData.email, password: formData.password })
         });
-        const rawText = await res.text();
-        let data;
-        try { data = JSON.parse(rawText); } catch (e) { throw new Error("JSON Error"); }
-        
+        const data = await res.json();
         if (res.ok) {
-          login(data.user, "colly_active_session");
+          login(data.user, "colly_active_session"); 
         } else {
           alert(data.error || "Login Failed ❌");
         }
-    } catch (err) { alert("Error: Check Console"); } finally { setLoading(false); }
+    } catch (err) { alert("Server Error."); }
+    finally { setLoading(false); }
   };
 
   const handleSignup = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("https://colly-1-iw6c.onrender.com/api/signup", {
+      const res = await fetch(`${API_BASE}/api/send-signup-otp`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({ email: formData.email })
       });
-      if (res.ok) { alert("✨ Account Created!"); setMode("login"); }
-      else { const data = await res.json(); alert(data.error); }
-    } catch (err) { alert("Server Error"); } finally { setLoading(false); }
+      if (res.ok) {
+        alert("📧 OTP Sent to your Gmail!");
+        setMode("reset");
+      } else {
+        const data = await res.json();
+        alert(data.error || "Signup Failed");
+      }
+    } catch (err) { alert("Server Error."); }
+    finally { setLoading(false); }
   };
 
   const handleForgotInit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("https://colly-1-iw6c.onrender.com/forgot-password", {
+      const res = await fetch(`${API_BASE}/forgot-password`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ identifier: formData.email })
       });
-      if (res.ok) { alert("✅ OTP Sent"); setMode("reset"); }
-    } catch (err) { alert("Error"); } finally { setLoading(false); }
+      const data = await res.json();
+      if (res.ok) {
+        alert(`✅ OTP Sent!`);
+        setFormData({ ...formData, email: data.email || formData.email });
+        setMode("reset");
+      } else { alert(data.error || "User not found."); }
+    } catch (err) { alert("Server Error."); }
+    finally { setLoading(false); }
   };
 
   const handleResetFinal = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-  
-  // Logic: Agar newPassword hai to reset, nahi to signup verification
-  const endpoint = formData.newPassword ? "/reset-password" : "/api/verify-and-signup";
+    e.preventDefault();
+    setLoading(true);
+    const endpoint = formData.newPassword ? "/reset-password" : "/api/verify-and-signup";
+    try {
+      const res = await fetch(`${API_BASE}${endpoint}`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData)
+      });
+      if (res.ok) {
+        alert("🎉 Success! Account verified/Password changed.");
+        setMode("login");
+      } else {
+        const data = await res.json();
+        alert(data.error || "Invalid OTP");
+      }
+    } catch (err) { alert("Server Error."); }
+    finally { setLoading(false); }
+  };
 
-  try {
-    const res = await fetch(`https://colly-1-iw6c.onrender.com${endpoint}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData) // Isme email aur otp hona zaroori hai
-    });
-
-    const data = await res.json();
-    if (res.ok) {
-      alert("✨ Success! Login now.");
-      setMode("login");
-    } else {
-      alert(data.error || "Verification failed!");
-    }
-  } catch (err) { alert("Server Connection Error"); }
-  finally { setLoading(false); }
-};
+  // --- UI RESOURCES ---
   const pinImages = [
     "https://loremflickr.com/500/700/indian,festival?random=101", "https://loremflickr.com/500/700/party,friends?random=102",    
     "https://loremflickr.com/500/700/indian,street,food?random=103", "https://loremflickr.com/500/700/marvel,superhero?random=104", 
@@ -98,9 +108,8 @@ const AuthPage = () => {
   const festivePopImages = [
     "https://loremflickr.com/150/150/taj,mahal?random=1", "https://loremflickr.com/150/150/holi,face?random=2",
     "https://loremflickr.com/150/150/diwali,diya?random=3", "https://loremflickr.com/150/150/indian,bride?random=4",
-    "https://loremflickr.com/150/150/kathakali,dance?random=5", "https://loremflickr.com/150/150/indian,friends?random=6",
-    "https://loremflickr.com/150/150/shiva,statue?random=7", "https://loremflickr.com/150/150/indian,market?random=8",
-    "https://loremflickr.com/150/150/auto,rickshaw?random=9", "https://loremflickr.com/150/150/masala,chai?random=10",
+    "https://loremflickr.com/150/150/shiva,statue?random=7", "https://loremflickr.com/150/150/masala,chai?random=10",
+    "https://loremflickr.com/150/150/varanasi,ghat?random=22", "https://loremflickr.com/150/150/india,gate?random=23",
   ];
 
   useEffect(() => {
@@ -112,17 +121,17 @@ const AuthPage = () => {
   }, []);
 
   const theme = { primary: "#A18167" };
-
   const styles = {
     page: { height: "100vh", width: "100vw", display: "flex", fontFamily: "'Verdana', sans-serif", overflow: "hidden", position: "relative", backgroundColor: "#000" },
     topLeftIconContainer: { position: "absolute", top: "25px", left: "25px", zIndex: 110, width: "90px", height: "90px" },
+    festivePopup: { position: "absolute", width: "80px", height: "80px", borderRadius: "50%", objectFit: "cover", pointerEvents: "none", boxShadow: "0 4px 15px rgba(0,0,0,0.3)", border: "3px solid #fff" },
     leftSide: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 1, display: "flex", justifyContent: "center", alignItems: "center" },
     masonryContainer: { display: "flex", gap: "20px", width: "120%", height: "120%", transform: "rotate(-5deg) translateY(-10%)", opacity: 0.6 },
     column: { display: "flex", flexDirection: "column", gap: "20px", width: "33%" },
     img: { width: "100%", borderRadius: "16px", display: "block", objectFit: "cover", height: "300px" },
     rightSide: { flex: "1", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "20px", position: "relative", zIndex: 10 },
-    formCard: { backgroundColor: "rgba(255, 255, 255, 0.12)", backdropFilter: "blur(12px)", padding: "30px", borderRadius: "20px", boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4)", width: "100%", maxWidth: "400px", textAlign: "center", border: "1px solid rgba(255, 255, 255, 0.2)" },
-    title: { fontSize: "22px", fontWeight: "bold", marginBottom: "20px", color: "#fff" },
+    formCard: { backgroundColor: "rgba(255, 255, 255, 0.12)", backdropFilter: "blur(15px)", WebkitBackdropFilter: "blur(15px)", padding: "30px", borderRadius: "20px", boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4)", width: "100%", maxWidth: "400px", textAlign: "center", border: "1px solid rgba(255, 255, 255, 0.2)" },
+    title: { fontSize: "22px", fontWeight: "bold", marginBottom: "20px", color: "#fff", fontFamily: "'Playfair Display', serif" },
     input: { width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.3)", backgroundColor: "rgba(255, 255, 255, 0.1)", fontSize: "14px", outline: "none", color: "#fff", marginTop: "12px", boxSizing: "border-box" },
     button: { width: "100%", padding: "12px", borderRadius: "8px", border: "none", backgroundColor: theme.primary, color: "#fff", fontSize: "17px", fontWeight: "bold", cursor: "pointer", marginTop: "20px" },
     row: { display: "flex", gap: "8px" },
@@ -188,8 +197,17 @@ const AuthPage = () => {
       <style>{`
           @keyframes scrollUp { 0% { transform: translateY(0); } 100% { transform: translateY(-50%); } }
           @keyframes scrollDown { 0% { transform: translateY(-50%); } 100% { transform: translateY(0); } }
+          @keyframes popUpDown { 0%, 100% { transform: scale(0); opacity: 0; } 20%, 80% { transform: scale(1); opacity: 1; } }
       `}</style>
+      
+      <div style={styles.topLeftIconContainer}>
+           <img src="/collylogo.png" alt="Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+      </div>
+
       <div style={styles.leftSide}>
+        {leftRandomPositions.map((pos, index) => (
+            <img key={index} src={festivePopImages[index % festivePopImages.length]} style={{...styles.festivePopup, top: pos.top, left: pos.left, animation: `popUpDown 6s ease-in-out infinite ${pos.delay}`}} alt="" />
+        ))}
         <div style={styles.masonryContainer}>
             <div style={{...styles.column, animation: "scrollUp 40s linear infinite"}}>{[...pinImages, ...pinImages].map((src, i) => <img key={i} src={src} style={styles.img} alt="" />)}</div>
             <div style={{...styles.column, animation: "scrollDown 50s linear infinite"}}>{[...pinImages, ...pinImages].reverse().map((src, i) => <img key={i} src={src} style={styles.img} alt="" />)}</div>
@@ -197,6 +215,7 @@ const AuthPage = () => {
         </div>
         <div style={{position: "absolute", top:0, left:0, width:"100%", height:"100%", background: "radial-gradient(circle, transparent 20%, rgba(0,0,0,0.8) 100%)"}}></div>
       </div>
+
       <div style={styles.rightSide}>
           <div style={{ marginBottom: '20px' }}><Logo /></div>
           <div style={styles.formCard}>
